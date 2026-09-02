@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Optimizador de turnos · Algoritmo Greedy SPT</title>
+  <meta name="description" content="Tablero que reorganiza una cola de atención con el algoritmo voraz Shortest Processing Time First y compara los tiempos de espera.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/estilos.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+  <script src="js/algoritmo.js" defer></script>
+  <script src="js/escenarios.js" defer></script>
+  <script src="js/metricas.js" defer></script>
+  <script src="js/graficos.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/main.js" defer></script>
+</head>
+<body>
+
+<header class="encabezado">
+  <div class="envoltorio encabezado-fila">
+    <div>
+      <h1>Optimizador de turnos</h1>
+      <p>Cuánto tiempo pierde una sala de espera cuando se atiende en estricto orden de llegada.</p>
+    </div>
+    <p class="sello">Análisis de Algoritmos · Greedy SPT</p>
+  </div>
+</header>
+
+<main class="envoltorio">
+
+  <!-- ============ Comparación visual: el corazón del tablero ============ -->
+  <section id="resultados" class="comparador" hidden>
+    <div class="comparador-cabecera">
+      <h2>La misma cola, dos formas de organizarla</h2>
+      <p class="pista-lectura">El tramo claro es lo que la persona espera; el sólido, lo que dura su atención.</p>
+    </div>
+
+    <div class="gantt-par">
+      <article class="gantt-col gantt-col--base">
+        <h3>Orden de llegada</h3>
+        <p class="gantt-leyenda" id="leyendaFifo"></p>
+        <div id="ganttFifo" class="gantt"></div>
+      </article>
+
+      <article class="gantt-col gantt-col--optimo">
+        <h3>Greedy SPT</h3>
+        <p class="gantt-leyenda" id="leyendaSpt"></p>
+        <div id="ganttSpt" class="gantt"></div>
+      </article>
+    </div>
+
+    <dl class="indicadores">
+      <div class="indicador indicador--principal">
+        <dt>Reducción de la espera promedio</dt>
+        <dd id="ahorro">0%</dd>
+      </div>
+      <div class="indicador">
+        <dt>Espera promedio por llegada</dt>
+        <dd><span id="esperaFifo">0</span> <span class="unidad">min</span></dd>
+      </div>
+      <div class="indicador">
+        <dt>Espera promedio con SPT</dt>
+        <dd><span id="esperaSpt">0</span> <span class="unidad">min</span></dd>
+      </div>
+      <div class="indicador">
+        <dt>Espera promedio en orden aleatorio</dt>
+        <dd><span id="esperaAleatorio">0</span> <span class="unidad">min</span></dd>
+      </div>
+      <div class="indicador">
+        <dt>Cierre de la cola</dt>
+        <dd><span id="makespan">0</span> <span class="unidad">min</span></dd>
+      </div>
+      <div class="indicador">
+        <dt>Comparaciones del ordenamiento</dt>
+        <dd id="comparaciones">0</dd>
+      </div>
+    </dl>
+    <p class="nota">El cierre de la cola no cambia con el orden: reordenar no elimina trabajo, redistribuye la espera.</p>
+  </section>
+
+  <div class="tablero">
+
+    <!-- ============ Captura de solicitudes ============ -->
+    <section class="panel">
+      <h2>Solicitudes</h2>
+
+      <form id="formulario" novalidate>
+        <div class="campo">
+          <label for="nombre">Nombre o tipo de turno</label>
+          <input type="text" id="nombre" maxlength="60" autocomplete="off" placeholder="Consulta médica general">
+        </div>
+        <div class="campo">
+          <label for="duracion">Duración estimada, en minutos</label>
+          <input type="number" id="duracion" min="1" max="600" step="1" placeholder="45">
+        </div>
+        <p id="error" class="error" role="alert" hidden></p>
+        <button type="submit" class="boton boton--tinta">Agregar a la cola</button>
+      </form>
+
+      <details class="carga">
+        <summary>Cargar varios turnos de una vez</summary>
+
+        <p class="nota">Juegos de datos de control. Cada uno responde a una pregunta distinta sobre el algoritmo.</p>
+        <div id="escenarios" class="escenarios"></div>
+        <p id="descripcionEscenario" class="descripcion-escenario"></p>
+
+        <div class="campo">
+          <label for="lote">O pega tu propia lista, un turno por línea</label>
+          <textarea id="lote" rows="5" spellcheck="false" placeholder="Consulta médica general, 45&#10;Vacunación, 5&#10;Lectura de exámenes, 10"></textarea>
+        </div>
+        <p id="errorLote" class="error" role="alert" hidden></p>
+        <div class="carga-acciones">
+          <button type="button" id="btnAgregarLote" class="boton boton--tinta boton--compacto">Agregar a la cola</button>
+          <button type="button" id="btnReemplazarLote" class="enlace-boton">Reemplazar la cola</button>
+        </div>
+
+        <p class="nota">También puedes generar una cola sintética:
+          <button type="button" id="btnAleatoria" class="enlace-boton">20 turnos aleatorios</button>
+        </p>
+      </details>
+
+      <div class="cola-cabecera">
+        <h3>En cola: <span id="conteo">0</span></h3>
+        <div class="acciones-menores">
+          <button type="button" id="btnEjemplo" class="enlace-boton">Caso de ejemplo</button>
+          <button type="button" id="btnVaciar" class="enlace-boton enlace-boton--riesgo">Vaciar</button>
+        </div>
+      </div>
+
+      <ul id="lista" class="cola"></ul>
+
+      <button type="button" id="btnSimular" class="boton boton--optimo" disabled>Optimizar la cola</button>
+    </section>
+
+    <!-- ============ Análisis ============ -->
+    <section class="panel">
+      <h2>Estrategias comparadas</h2>
+      <p class="nota">Se simulan cuatro órdenes sobre la misma cola. El peor caso también es voraz: elegir siempre la tarea más larga.</p>
+      <div class="lienzo lienzo--barras">
+        <canvas id="canvasBarras"></canvas>
+      </div>
+
+      <h3 class="titulo-tablas">Detalle por turno</h3>
+      <div class="tablas">
+        <div>
+          <h4 class="tabla-titulo tabla-titulo--base">Orden de llegada</h4>
+          <table class="tabla">
+            <thead>
+              <tr><th>Turno</th><th class="num">Dur.</th><th class="num">Espera</th><th class="num">Sale</th></tr>
+            </thead>
+            <tbody id="tablaFifo"></tbody>
+          </table>
+        </div>
+        <div>
+          <h4 class="tabla-titulo tabla-titulo--optimo">Greedy SPT</h4>
+          <table class="tabla">
+            <thead>
+              <tr><th>Turno</th><th class="num">Dur.</th><th class="num">Espera</th><th class="num">Sale</th></tr>
+            </thead>
+            <tbody id="tablaSpt"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ Evidencia empírica de la complejidad ============ -->
+  <section class="panel panel--ancho">
+    <div class="complejidad-cabecera">
+      <div>
+        <h2>Complejidad medida, no supuesta</h2>
+        <p class="nota">Se ordenan colas sintéticas de hasta 100.000 turnos con el mismo Merge Sort del tablero y se superpone la curva n·log n. Si las series coinciden, el crecimiento es O(n log n).</p>
+      </div>
+      <button type="button" id="btnComplejidad" class="boton boton--tinta boton--compacto">Ejecutar la medición</button>
+    </div>
+    <div class="lienzo lienzo--complejidad">
+      <canvas id="canvasComplejidad"></canvas>
+    </div>
+    <p id="notaComplejidad" class="nota nota--medicion"></p>
+  </section>
+
+  <section class="fundamento">
+    <h2>Por qué ordenar de menor a mayor es óptimo</h2>
+    <p>
+      La espera de quien ocupa la posición <em>i</em> es la suma de las duraciones que la preceden,
+      <span class="formula">W<sub>i</sub> = Σ<sub>j&lt;i</sub> t<sub>j</sub></span>.
+      La espera acumulada de toda la sala es
+      <span class="formula">T = Σ<sub>i=1</sub><sup>n</sup> (n − i) · t<sub>i</sub></span>:
+      cada turno arrastra su duración tantas veces como personas quedan detrás.
+    </p>
+    <p>
+      Al intercambiar dos turnos contiguos <em>k</em> y <em>k+1</em> solo cambia la espera de uno de ellos, y la
+      variación total es <span class="formula">ΔT = t<sub>k+1</sub> − t<sub>k</sub></span>.
+      Si el más largo iba primero, el intercambio reduce la espera total; por lo tanto ningún orden con una
+      inversión puede ser óptimo, y ordenar ascendentemente por duración alcanza el mínimo global.
+    </p>
+    <p class="nota">
+      Válido para un solo punto de atención, con todas las solicitudes disponibles desde el inicio y sin
+      prioridades clínicas. Con llegadas escalonadas o urgencias el criterio cambia.
+    </p>
+  </section>
+</main>
+
+<footer class="pie">
+  <p class="envoltorio">Examen 1 · Análisis de Algoritmos · Institución Universitaria Pascual Bravo</p>
+</footer>
+
+</body>
+</html>
