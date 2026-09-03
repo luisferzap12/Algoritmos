@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Optimizador de turnos · Algoritmo Greedy SPT</title>
+  <meta name="description" content="Tablero que reorganiza una cola de atención con el algoritmo voraz Shortest Processing Time First y compara los tiempos de espera.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+/* =====================================================================
+   estilos.css  —  Integrante 2
+   Paleta: papel de sala de espera, tinta azul-pizarra, rojo ladrillo
+   para el tiempo perdido y verde para el tiempo recuperado.
+   ===================================================================== */
+
+:root {
+  --papel: #FBFAF8;
+  --panel: #FFFFFF;
+  --tinta: #16212B;
+  --tinta-suave: #5C6670;
+  --linea: #E2DED5;
+  --espera: #C0463B;
+  --espera-fondo: #F1DCD8;
+  --optimo: #1E7A6A;
+  --optimo-fondo: #E4EFEC;
+  --ambar: #D99A2B;
+
+  --sans: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'Courier New', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 { margin: 0; font-weight: 600; line-height: 1.2; }
+p { margin: 0; }
+
+.envoltorio {
+  width: min(1180px, 100% - 3rem);
+  margin-inline: auto;
+}
+
+/* ---------------------------- encabezado --------------------------- */
+
+.encabezado {
+  border-bottom: 1px solid var(--linea);
+  background: var(--panel);
+  padding-block: 1.6rem;
+}
+
+.encabezado-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.encabezado h1 {
+  font-size: 1.65rem;
+  letter-spacing: -0.02em;
+}
+
+.encabezado p {
+  color: var(--tinta-suave);
+  font-size: 0.95rem;
+  max-width: 58ch;
+  margin-top: 0.3rem;
+}
+
+.sello {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--tinta-suave);
+  border: 1px solid var(--linea);
+  border-radius: 2px;
+  padding: 0.3rem 0.6rem;
+  white-space: nowrap;
+}
+
+main { padding-block: 2.2rem 3rem; }
+
+/* --------------------------- comparador ---------------------------- */
+
+.comparador {
+  background: var(--panel);
+  border: 1px solid var(--linea);
+  border-radius: 3px;
+  padding: 1.6rem 1.6rem 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.comparador-cabecera { margin-bottom: 1.4rem; }
+.comparador-cabecera h2 { font-size: 1.25rem; }
+
+.pista-lectura {
+  color: var(--tinta-suave);
+  font-size: 0.88rem;
+  margin-top: 0.25rem;
+}
+
+.gantt-par {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.6rem;
+}
+
+.gantt-col { min-width: 0; }
+
+.gantt-col h3 {
+  font-size: 0.98rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 2px solid var(--linea);
+}
+
+.gantt-col--base h3 { border-bottom-color: var(--espera); }
+.gantt-col--optimo h3 { border-bottom-color: var(--optimo); }
+
+.gantt-leyenda {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: var(--tinta-suave);
+  margin-block: 0.45rem 0.8rem;
+}
+
+.gantt { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.gantt-fila {
+  display: grid;
+  grid-template-columns: minmax(0, 8.5rem) 1fr;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.gantt-nombre {
+  font-size: 0.8rem;
+  color: var(--tinta-suave);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gantt-pista { display: flex; height: 1.55rem; align-items: stretch; }
+
+.gantt-espera,
+.gantt-atencion {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-inline: 0.3rem;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  overflow: hidden;
+  transition: width 240ms ease;
+}
+
+.gantt-espera {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--espera-fondo) 0 5px,
+    #F7E9E6 5px 10px
+  );
+  color: var(--espera);
+}
+
+.gantt-atencion {
+  background: var(--tinta);
+  color: #FFFFFF;
+  min-width: 3px;
+}
+
+.gantt-col--optimo .gantt-atencion { background: var(--optimo); }
+
+.gantt-resto {
+  font-size: 0.78rem;
+  color: var(--tinta-suave);
+  margin-top: 0.4rem;
+}
+
+/* --------------------------- indicadores --------------------------- */
+
+.indicadores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0;
+  margin: 1.6rem 0 0.7rem;
+  border-top: 1px solid var(--linea);
+}
+
+.indicador {
+  padding: 0.9rem 1rem 0.9rem 0;
+  border-right: 1px solid var(--linea);
+}
+
+.indicador:last-child { border-right: 0; }
+
+.indicador dt {
+  font-size: 0.76rem;
+  color: var(--tinta-suave);
+  max-width: 20ch;
+}
+
+.indicador dd {
+  margin: 0.25rem 0 0;
+  font-family: var(--mono);
+  font-size: 1.35rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.indicador--principal dd {
+  font-size: 2.6rem;
+  color: var(--optimo);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.unidad {
+  font-size: 0.8rem;
+  color: var(--tinta-suave);
+  font-weight: 400;
+}
+
+.nota {
+  color: var(--tinta-suave);
+  font-size: 0.83rem;
+  max-width: 78ch;
+}
+
+.nota--medicion {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  margin-top: 0.7rem;
+}
+
+/* ----------------------------- tablero ----------------------------- */
+
+.tablero {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--linea);
+  border-radius: 3px;
+  padding: 1.4rem;
+}
+
+.panel > h2 {
+  font-size: 1.1rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--linea);
+  margin-bottom: 1rem;
+}
+
+.panel--ancho { margin-top: 1.5rem; }
+
+/* --------------------------- formulario ---------------------------- */
+
+.campo { margin-bottom: 0.9rem; }
+
+.campo label {
+  display: block;
+  font-size: 0.83rem;
+  color: var(--tinta-suave);
+  margin-bottom: 0.3rem;
+}
+
+.campo input {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--linea);
+  border-radius: 2px;
+  background: var(--papel);
+  font-family: var(--sans);
+  font-size: 0.95rem;
+  color: var(--tinta);
+}
+
+.campo input:focus-visible {
+  outline: 2px solid var(--tinta);
+  outline-offset: 1px;
+  background: var(--panel);
+}
+
+.error {
+  color: var(--espera);
+  font-size: 0.83rem;
+  margin-bottom: 0.6rem;
+}
+
+.boton {
+  width: 100%;
+  padding: 0.72rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  font-family: var(--sans);
+  font-size: 0.92rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 140ms ease;
+}
+
+.boton--tinta { background: var(--tinta); color: #FFFFFF; }
+.boton--tinta:hover { background: #24333F; }
+.boton--optimo { background: var(--optimo); color: #FFFFFF; margin-top: 1rem; }
+.boton--optimo:hover { background: #196356; }
+.boton--compacto { width: auto; white-space: nowrap; }
+
+.boton:disabled {
+  background: var(--papel);
+  border-color: var(--linea);
+  color: #A8A49C;
+  cursor: not-allowed;
+}
+
+.boton:focus-visible,
+.enlace-boton:focus-visible,
+.turno-quitar:focus-visible {
+  outline: 2px solid var(--tinta);
+  outline-offset: 2px;
+}
+
+.enlace-boton {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  color: var(--tinta-suave);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.enlace-boton:hover { color: var(--tinta); }
+.enlace-boton--riesgo:hover { color: var(--espera); }
+
+/* ------------------------------ cola ------------------------------- */
+
+.cola-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--linea);
+}
+
+.cola-cabecera h3 { font-size: 0.92rem; font-weight: 500; }
+.acciones-menores { display: flex; gap: 0.9rem; }
+
+.cola {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 17rem;
+  overflow-y: auto;
+}
+
+.cola li {
+  display: grid;
+  grid-template-columns: 1.4rem 1fr auto 1.4rem;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--linea);
+  font-size: 0.9rem;
+}
+
+.cola li.vacio {
+  display: block;
+  color: var(--tinta-suave);
+  font-size: 0.85rem;
+  padding: 1.2rem 0;
+  border-bottom: 0;
+}
+
+.turno-orden {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--tinta-suave);
+}
+
+.turno-nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.turno-minutos {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--tinta);
+}
+
+.turno-quitar {
+  background: none;
+  border: 0;
+  font-size: 1.05rem;
+  line-height: 1;
+  color: #B7B2A9;
+  cursor: pointer;
+  padding: 0.15rem;
+}
+
+.turno-quitar:hover { color: var(--espera); }
+
+/* ----------------------------- gráficos ---------------------------- */
+
+.lienzo { position: relative; }
+.lienzo--barras { height: 240px; margin-bottom: 1.6rem; }
+.lienzo--complejidad { height: 270px; margin-top: 1.2rem; }
+
+/* ------------------------------ tablas ----------------------------- */
+
+.titulo-tablas {
+  font-size: 0.92rem;
+  font-weight: 500;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--linea);
+  margin-bottom: 0.9rem;
+}
+
+.tablas { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+
+.tabla-titulo {
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding-bottom: 0.3rem;
+  margin-bottom: 0.4rem;
+  border-bottom: 2px solid var(--linea);
+}
+
+.tabla-titulo--base { border-bottom-color: var(--espera); }
+.tabla-titulo--optimo { border-bottom-color: var(--optimo); }
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.tabla th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--tinta-suave);
+  padding: 0.35rem 0.3rem;
+  border-bottom: 1px solid var(--linea);
+}
+
+.tabla td {
+  padding: 0.35rem 0.3rem;
+  border-bottom: 1px solid #F0EDE7;
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabla .num {
+  text-align: right;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.fila-total td {
+  font-weight: 600;
+  border-bottom: 0;
+  border-top: 1px solid var(--linea);
+}
+
+/* --------------------------- complejidad --------------------------- */
+
+.complejidad-cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.complejidad-cabecera h2 {
+  font-size: 1.1rem;
+  margin-bottom: 0.35rem;
+}
+
+/* --------------------------- fundamento ---------------------------- */
+
+.fundamento {
+  margin-top: 2.2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--linea);
+  max-width: 74ch;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.fundamento h2 { font-size: 1.05rem; }
+.fundamento p { font-size: 0.92rem; }
+
+.formula {
+  font-family: var(--mono);
+  font-size: 0.86rem;
+  background: #F2EFE9;
+  padding: 0.1rem 0.35rem;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+
+/* ------------------------------- pie ------------------------------- */
+
+.pie {
+  border-top: 1px solid var(--linea);
+  padding-block: 1.2rem;
+  font-size: 0.8rem;
+  color: var(--tinta-suave);
+  background: var(--panel);
+}
+
+/* --------------------------- responsive ---------------------------- */
+
+@media (max-width: 940px) {
+  .tablero { grid-template-columns: 1fr; }
+  .gantt-par { grid-template-columns: 1fr; gap: 1.8rem; }
+  .indicador { border-right: 0; border-bottom: 1px solid var(--linea); }
+}
+
+@media (max-width: 620px) {
+  .envoltorio { width: min(1180px, 100% - 1.6rem); }
+  .encabezado h1 { font-size: 1.35rem; }
+  .indicador--principal dd { font-size: 2.1rem; }
+  .tablas { grid-template-columns: 1fr; }
+  .gantt-fila { grid-template-columns: minmax(0, 6rem) 1fr; }
+  .boton--compacto { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+
+.sin-grafico {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.83rem;
+  color: var(--tinta-suave);
+  background: var(--papel);
+  border: 1px dashed var(--linea);
+  border-radius: 2px;
+}
+
+/* ------------------------- carga por lote -------------------------- */
+
+.carga {
+  margin-top: 1.1rem;
+  border-top: 1px solid var(--linea);
+  padding-top: 0.9rem;
+}
+
+.carga summary {
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--tinta);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.carga summary::-webkit-details-marker { display: none; }
+
+.carga summary::before {
+  content: '+';
+  font-family: var(--mono);
+  color: var(--tinta-suave);
+}
+
+.carga[open] summary::before { content: '\2212'; }
+
+.carga summary:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; }
+
+.carga > *:not(summary) { margin-top: 0.8rem; }
+
+.escenarios { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+.ficha-escenario {
+  background: var(--papel);
+  border: 1px solid var(--linea);
+  border-radius: 2px;
+  padding: 0.32rem 0.6rem;
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  color: var(--tinta);
+  cursor: pointer;
+}
+
+.ficha-escenario:hover { border-color: var(--tinta); }
+.ficha-escenario:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; }
+
+.descripcion-escenario {
+  font-size: 0.8rem;
+  color: var(--optimo);
+  min-height: 1.2rem;
+}
+
+.carga textarea {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--linea);
+  border-radius: 2px;
+  background: var(--papel);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--tinta);
+  resize: vertical;
+}
+
+.carga textarea:focus-visible {
+  outline: 2px solid var(--tinta);
+  outline-offset: 1px;
+  background: var(--panel);
+}
+
+.carga-acciones {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+  </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<header class="encabezado">
+  <div class="envoltorio encabezado-fila">
+    <div>
+      <h1>Optimizador de turnos</h1>
+      <p>Cuánto tiempo pierde una sala de espera cuando se atiende en estricto orden de llegada.</p>
+    </div>
+    <p class="sello">Análisis de Algoritmos · Greedy SPT</p>
+  </div>
+</header>
+
+<main class="envoltorio">
+
+  <!-- ============ Comparación visual: el corazón del tablero ============ -->
+  <section id="resultados" class="comparador" hidden>
+    <div class="comparador-cabecera">
+      <h2>La misma cola, dos formas de organizarla</h2>
+      <p class="pista-lectura">El tramo claro es lo que la persona espera; el sólido, lo que dura su atención.</p>
+    </div>
+
+    <div class="gantt-par">
+      <article class="gantt-col gantt-col--base">
+        <h3>Orden de llegada</h3>
+        <p class="gantt-leyenda" id="leyendaFifo"></p>
+        <div id="ganttFifo" class="gantt"></div>
+      </article>
+
+      <article class="gantt-col gantt-col--optimo">
+        <h3>Greedy SPT</h3>
+        <p class="gantt-leyenda" id="leyendaSpt"></p>
+        <div id="ganttSpt" class="gantt"></div>
+      </article>
+    </div>
+
+    <dl class="indicadores">
+      <div class="indicador indicador--principal">
+        <dt>Reducción de la espera promedio</dt>
+        <dd id="ahorro">0%</dd>
+      </div>
+      <div class="indicador">
+        <dt>Espera promedio por llegada</dt>
+        <dd><span id="esperaFifo">0</span> <span class="unidad">min</span></dd>
+      </div>
+      <div class="indicador">
+        <dt>Espera promedio con SPT</dt>
+        <dd><span id="esperaSpt">0</span> <span class="unidad">min</span></dd>
+      </div>
+      <div class="indicador">
+        <dt>Espera promedio en orden aleatorio</dt>
+        <dd><span id="esperaAleatorio">0</span> <span class="unidad">min</span></dd>
+      </div>
+      <div class="indicador">
+        <dt>Cierre de la cola</dt>
+        <dd><span id="makespan">0</span> <span class="unidad">min</span></dd>
+      </div>
+      <div class="indicador">
+        <dt>Comparaciones del ordenamiento</dt>
+        <dd id="comparaciones">0</dd>
+      </div>
+    </dl>
+    <p class="nota">El cierre de la cola no cambia con el orden: reordenar no elimina trabajo, redistribuye la espera.</p>
+  </section>
+
+  <div class="tablero">
+
+    <!-- ============ Captura de solicitudes ============ -->
+    <section class="panel">
+      <h2>Solicitudes</h2>
+
+      <form id="formulario" novalidate>
+        <div class="campo">
+          <label for="nombre">Nombre o tipo de turno</label>
+          <input type="text" id="nombre" maxlength="60" autocomplete="off" placeholder="Consulta médica general">
+        </div>
+        <div class="campo">
+          <label for="duracion">Duración estimada, en minutos</label>
+          <input type="number" id="duracion" min="1" max="600" step="1" placeholder="45">
+        </div>
+        <p id="error" class="error" role="alert" hidden></p>
+        <button type="submit" class="boton boton--tinta">Agregar a la cola</button>
+      </form>
+
+      <details class="carga">
+        <summary>Cargar varios turnos de una vez</summary>
+
+        <p class="nota">Juegos de datos de control. Cada uno responde a una pregunta distinta sobre el algoritmo.</p>
+        <div id="escenarios" class="escenarios"></div>
+        <p id="descripcionEscenario" class="descripcion-escenario"></p>
+
+        <div class="campo">
+          <label for="lote">O pega tu propia lista, un turno por línea</label>
+          <textarea id="lote" rows="5" spellcheck="false" placeholder="Consulta médica general, 45&#10;Vacunación, 5&#10;Lectura de exámenes, 10"></textarea>
+        </div>
+        <p id="errorLote" class="error" role="alert" hidden></p>
+        <div class="carga-acciones">
+          <button type="button" id="btnAgregarLote" class="boton boton--tinta boton--compacto">Agregar a la cola</button>
+          <button type="button" id="btnReemplazarLote" class="enlace-boton">Reemplazar la cola</button>
+        </div>
+
+        <p class="nota">También puedes generar una cola sintética:
+          <button type="button" id="btnAleatoria" class="enlace-boton">20 turnos aleatorios</button>
+        </p>
+      </details>
+
+      <div class="cola-cabecera">
+        <h3>En cola: <span id="conteo">0</span></h3>
+        <div class="acciones-menores">
+          <button type="button" id="btnEjemplo" class="enlace-boton">Caso de ejemplo</button>
+          <button type="button" id="btnVaciar" class="enlace-boton enlace-boton--riesgo">Vaciar</button>
+        </div>
+      </div>
+
+      <ul id="lista" class="cola"></ul>
+
+      <button type="button" id="btnSimular" class="boton boton--optimo" disabled>Optimizar la cola</button>
+    </section>
+
+    <!-- ============ Análisis ============ -->
+    <section class="panel">
+      <h2>Estrategias comparadas</h2>
+      <p class="nota">Se simulan cuatro órdenes sobre la misma cola. El peor caso también es voraz: elegir siempre la tarea más larga.</p>
+      <div class="lienzo lienzo--barras">
+        <canvas id="canvasBarras"></canvas>
+      </div>
+
+      <h3 class="titulo-tablas">Detalle por turno</h3>
+      <div class="tablas">
+        <div>
+          <h4 class="tabla-titulo tabla-titulo--base">Orden de llegada</h4>
+          <table class="tabla">
+            <thead>
+              <tr><th>Turno</th><th class="num">Dur.</th><th class="num">Espera</th><th class="num">Sale</th></tr>
+            </thead>
+            <tbody id="tablaFifo"></tbody>
+          </table>
+        </div>
+        <div>
+          <h4 class="tabla-titulo tabla-titulo--optimo">Greedy SPT</h4>
+          <table class="tabla">
+            <thead>
+              <tr><th>Turno</th><th class="num">Dur.</th><th class="num">Espera</th><th class="num">Sale</th></tr>
+            </thead>
+            <tbody id="tablaSpt"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ Evidencia empírica de la complejidad ============ -->
+  <section class="panel panel--ancho">
+    <div class="complejidad-cabecera">
+      <div>
+        <h2>Complejidad medida, no supuesta</h2>
+        <p class="nota">Se ordenan colas sintéticas de hasta 100.000 turnos con el mismo Merge Sort del tablero y se superpone la curva n·log n. Si las series coinciden, el crecimiento es O(n log n).</p>
+      </div>
+      <button type="button" id="btnComplejidad" class="boton boton--tinta boton--compacto">Ejecutar la medición</button>
+    </div>
+    <div class="lienzo lienzo--complejidad">
+      <canvas id="canvasComplejidad"></canvas>
+    </div>
+    <p id="notaComplejidad" class="nota nota--medicion"></p>
+  </section>
+
+  <section class="fundamento">
+    <h2>Por qué ordenar de menor a mayor es óptimo</h2>
+    <p>
+      La espera de quien ocupa la posición <em>i</em> es la suma de las duraciones que la preceden,
+      <span class="formula">W<sub>i</sub> = Σ<sub>j&lt;i</sub> t<sub>j</sub></span>.
+      La espera acumulada de toda la sala es
+      <span class="formula">T = Σ<sub>i=1</sub><sup>n</sup> (n − i) · t<sub>i</sub></span>:
+      cada turno arrastra su duración tantas veces como personas quedan detrás.
+    </p>
+    <p>
+      Al intercambiar dos turnos contiguos <em>k</em> y <em>k+1</em> solo cambia la espera de uno de ellos, y la
+      variación total es <span class="formula">ΔT = t<sub>k+1</sub> − t<sub>k</sub></span>.
+      Si el más largo iba primero, el intercambio reduce la espera total; por lo tanto ningún orden con una
+      inversión puede ser óptimo, y ordenar ascendentemente por duración alcanza el mínimo global.
+    </p>
+    <p class="nota">
+      Válido para un solo punto de atención, con todas las solicitudes disponibles desde el inicio y sin
+      prioridades clínicas. Con llegadas escalonadas o urgencias el criterio cambia.
+    </p>
+  </section>
+</main>
+
+<footer class="pie">
+  <p class="envoltorio">Examen 1 · Análisis de Algoritmos · Institución Universitaria Pascual Bravo</p>
+</footer>
+
+<script>
+/* =====================================================================
+   algoritmo.js  —  Integrante 3
+   Núcleo algorítmico: ordenamiento por mezcla (Merge Sort) implementado
+   a mano + la elección voraz del algoritmo Greedy SPT.
+
+   Por qué no usamos Array.prototype.sort():
+   el examen evalúa el ALGORITMO, no la librería estándar. Implementarlo
+   nos permite (a) demostrar la complejidad O(n log n), (b) contar
+   comparaciones reales y (c) sustentar el código línea por línea.
+   ===================================================================== */
+
+var Algoritmo = (function () {
+  'use strict';
+
+  /* -------------------------------------------------------------------
+     Merge Sort — estable, O(n log n) en el peor caso.
+     Recibe un contador para instrumentar el número de comparaciones.
+     ------------------------------------------------------------------- */
+  function mergeSort(lista, comparar, contador) {
+    if (lista.length <= 1) return lista;
+
+    var medio = Math.floor(lista.length / 2);
+    var izquierda = mergeSort(lista.slice(0, medio), comparar, contador);
+    var derecha = mergeSort(lista.slice(medio), comparar, contador);
+
+    return mezclar(izquierda, derecha, comparar, contador);
+  }
+
+  function mezclar(a, b, comparar, contador) {
+    var resultado = [];
+    var i = 0;
+    var j = 0;
+
+    while (i < a.length && j < b.length) {
+      contador.comparaciones++;
+      // <= mantiene la estabilidad: ante empates gana quien llegó primero.
+      if (comparar(a[i], b[j]) <= 0) {
+        resultado.push(a[i++]);
+      } else {
+        resultado.push(b[j++]);
+      }
+    }
+    while (i < a.length) resultado.push(a[i++]);
+    while (j < b.length) resultado.push(b[j++]);
+
+    return resultado;
+  }
+
+  /* -------------------------------------------------------------------
+     Criterios de comparación
+     ------------------------------------------------------------------- */
+  var porDuracionAsc = function (a, b) { return a.duracion - b.duracion; };
+  var porDuracionDesc = function (a, b) { return b.duracion - a.duracion; };
+
+  /* -------------------------------------------------------------------
+     ordenar(): envoltura instrumentada. Devuelve el orden resultante,
+     el número de comparaciones y el tiempo de ejecución medido.
+     ------------------------------------------------------------------- */
+  function ordenar(tareas, comparar) {
+    var contador = { comparaciones: 0 };
+    var inicio = performance.now();
+    var orden = mergeSort(tareas.slice(), comparar, contador);
+    var fin = performance.now();
+
+    return {
+      orden: orden,
+      comparaciones: contador.comparaciones,
+      ms: fin - inicio
+    };
+  }
+
+  /* -------------------------------------------------------------------
+     ELECCIÓN VORAZ (greedy choice):
+     en cada paso se atiende la tarea pendiente de menor duración.
+     Ordenar ascendentemente por duración equivale a aplicar esa
+     elección n veces, y por el argumento de intercambio es el óptimo
+     global para minimizar la espera promedio.
+     ------------------------------------------------------------------- */
+  function spt(tareas) {
+    return ordenar(tareas, porDuracionAsc);
+  }
+
+  /* Contraejemplo deliberado: la elección voraz invertida (la tarea más
+     larga primero) produce el PEOR orden posible. Sirve para demostrar
+     que el criterio de la elección es lo que hace óptimo al algoritmo. */
+  function lpt(tareas) {
+    return ordenar(tareas, porDuracionDesc);
+  }
+
+  /* -------------------------------------------------------------------
+     Barajado Fisher-Yates, O(n): genera el "orden aleatorio" contra el
+     que el examen pide comparar.
+     ------------------------------------------------------------------- */
+  function barajar(tareas) {
+    var copia = tareas.slice();
+    for (var i = copia.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = copia[i];
+      copia[i] = copia[j];
+      copia[j] = tmp;
+    }
+    return copia;
+  }
+
+  /* -------------------------------------------------------------------
+     Banco de pruebas empírico: mide el tiempo real de ordenamiento para
+     tamaños crecientes de n y lo contrasta con la curva teórica
+     c · n · log2(n). Es la evidencia experimental de la complejidad.
+     ------------------------------------------------------------------- */
+  function benchmark(tamanos) {
+    var mediciones = [];
+
+    for (var k = 0; k < tamanos.length; k++) {
+      var n = tamanos[k];
+      var sinteticas = [];
+      for (var i = 0; i < n; i++) {
+        sinteticas.push({ id: i, nombre: 't' + i, duracion: 1 + Math.floor(Math.random() * 240) });
+      }
+      var r = spt(sinteticas);
+      mediciones.push({
+        n: n,
+        ms: r.ms,
+        comparaciones: r.comparaciones,
+        teorico: n * Math.log2(n)   // n·log n sin constante
+      });
+    }
+
+    // Escalamos la curva teórica al último punto medido para poder
+    // superponerla con los tiempos reales en la misma gráfica.
+    var ultima = mediciones[mediciones.length - 1];
+    var escala = ultima.teorico > 0 ? ultima.ms / ultima.teorico : 0;
+    for (var m = 0; m < mediciones.length; m++) {
+      mediciones[m].teoricoEscalado = mediciones[m].teorico * escala;
+    }
+
+    return mediciones;
+  }
+
+  return {
+    mergeSort: mergeSort,
+    ordenar: ordenar,
+    spt: spt,
+    lpt: lpt,
+    barajar: barajar,
+    benchmark: benchmark,
+    porDuracionAsc: porDuracionAsc,
+    porDuracionDesc: porDuracionDesc
+  };
+})();
+
+/* =====================================================================
+   escenarios.js  —  Integrante 3
+   Juegos de datos de control para probar y sustentar el tablero, y
+   lectura de listas pegadas por el usuario.
+
+   Cada escenario responde a una pregunta distinta sobre el algoritmo,
+   no son solo "datos de relleno".
+   ===================================================================== */
+
+var Escenarios = (function () {
+  'use strict';
+
+  var MAX_LINEAS = 200;
+
+  var catalogo = {
+    clinica: {
+      etiqueta: 'Clínica (4)',
+      descripcion: 'El caso del enunciado: una consulta larga bloqueando tres turnos cortos.',
+      turnos: [
+        { nombre: 'Consulta médica general', duracion: 45 },
+        { nombre: 'Vacunación', duracion: 5 },
+        { nombre: 'Lectura de exámenes', duracion: 10 },
+        { nombre: 'Curación básica', duracion: 15 }
+      ]
+    },
+
+    taller: {
+      etiqueta: 'Taller técnico (8)',
+      descripcion: 'Duraciones muy dispares en un taller: el ahorro se dispara.',
+      turnos: [
+        { nombre: 'Cambio de aceite', duracion: 20 },
+        { nombre: 'Revisión de frenos', duracion: 60 },
+        { nombre: 'Calibración de llantas', duracion: 8 },
+        { nombre: 'Diagnóstico electrónico', duracion: 90 },
+        { nombre: 'Cambio de batería', duracion: 12 },
+        { nombre: 'Alineación', duracion: 45 },
+        { nombre: 'Revisión de luces', duracion: 6 },
+        { nombre: 'Lavado técnico', duracion: 25 }
+      ]
+    },
+
+    parejas: {
+      etiqueta: 'Duraciones iguales (6)',
+      descripcion: 'Todas duran lo mismo. El ahorro es 0 %: sin dispersión, reordenar no sirve de nada.',
+      turnos: [
+        { nombre: 'Toma de muestra 1', duracion: 15 },
+        { nombre: 'Toma de muestra 2', duracion: 15 },
+        { nombre: 'Toma de muestra 3', duracion: 15 },
+        { nombre: 'Toma de muestra 4', duracion: 15 },
+        { nombre: 'Toma de muestra 5', duracion: 15 },
+        { nombre: 'Toma de muestra 6', duracion: 15 }
+      ]
+    },
+
+    extremo: {
+      etiqueta: 'Un caso atípico (7)',
+      descripcion: 'Una cirugía de 240 minutos delante de seis trámites de 5. El peor escenario para FIFO.',
+      turnos: [
+        { nombre: 'Cirugía ambulatoria', duracion: 240 },
+        { nombre: 'Entrega de fórmula', duracion: 5 },
+        { nombre: 'Toma de tensión', duracion: 5 },
+        { nombre: 'Sello de incapacidad', duracion: 5 },
+        { nombre: 'Entrega de resultados', duracion: 5 },
+        { nombre: 'Agendamiento', duracion: 5 },
+        { nombre: 'Vacunación', duracion: 5 }
+      ]
+    },
+
+    ordenada: {
+      etiqueta: 'Ya ordenada (5)',
+      descripcion: 'La cola llega ordenada de menor a mayor: SPT no la cambia y el ahorro es 0 %.',
+      turnos: [
+        { nombre: 'Trámite exprés', duracion: 5 },
+        { nombre: 'Control de rutina', duracion: 10 },
+        { nombre: 'Curación', duracion: 20 },
+        { nombre: 'Terapia física', duracion: 40 },
+        { nombre: 'Procedimiento menor', duracion: 75 }
+      ]
+    }
+  };
+
+  function obtener(clave) {
+    var e = catalogo[clave];
+    if (!e) return [];
+    return e.turnos.map(function (t) { return { nombre: t.nombre, duracion: t.duracion }; });
+  }
+
+  function listar() {
+    return Object.keys(catalogo).map(function (clave) {
+      return { clave: clave, etiqueta: catalogo[clave].etiqueta, descripcion: catalogo[clave].descripcion };
+    });
+  }
+
+  /* -------------------------------------------------------------------
+     Cola sintética: n turnos con duraciones aleatorias. Útil para ver
+     el comportamiento del tablero con volúmenes grandes.
+     ------------------------------------------------------------------- */
+  function aleatorio(n, minimo, maximo) {
+    var turnos = [];
+    for (var i = 1; i <= n; i++) {
+      turnos.push({
+        nombre: 'Turno ' + i,
+        duracion: minimo + Math.floor(Math.random() * (maximo - minimo + 1))
+      });
+    }
+    return turnos;
+  }
+
+  /* -------------------------------------------------------------------
+     parsear(): lee un texto con un turno por línea.
+     Acepta "Nombre, 45" | "Nombre; 45" | "Nombre  45" | "Nombre, 45 min".
+     Devuelve los turnos válidos y el detalle de las líneas rechazadas,
+     para que la persona sepa exactamente qué corregir.
+     ------------------------------------------------------------------- */
+  function parsear(texto) {
+    var turnos = [];
+    var errores = [];
+    var lineas = String(texto).split(/\r?\n/);
+
+    if (lineas.length > MAX_LINEAS) {
+      errores.push('Máximo ' + MAX_LINEAS + ' líneas por carga.');
+      lineas = lineas.slice(0, MAX_LINEAS);
+    }
+
+    for (var i = 0; i < lineas.length; i++) {
+      var linea = lineas[i].trim();
+      if (linea === '') continue;
+
+      // nombre + separador + número final (con "min" opcional)
+      var coincidencia = linea.match(/^(.+?)[\s,;\t]+(\d+)\s*(?:min\.?|minutos?)?$/i);
+
+      if (!coincidencia) {
+        errores.push('Línea ' + (i + 1) + ': falta la duración en minutos.');
+        continue;
+      }
+
+      var nombre = coincidencia[1].trim().replace(/[,;]$/, '').trim();
+      var duracion = parseInt(coincidencia[2], 10);
+
+      if (nombre === '') {
+        errores.push('Línea ' + (i + 1) + ': falta el nombre del turno.');
+      } else if (nombre.length > 60) {
+        errores.push('Línea ' + (i + 1) + ': el nombre supera los 60 caracteres.');
+      } else if (duracion <= 0 || duracion > 600) {
+        errores.push('Línea ' + (i + 1) + ': la duración debe estar entre 1 y 600 minutos.');
+      } else {
+        turnos.push({ nombre: nombre, duracion: duracion });
+      }
+    }
+
+    return { turnos: turnos, errores: errores };
+  }
+
+  return {
+    obtener: obtener,
+    listar: listar,
+    aleatorio: aleatorio,
+    parsear: parsear
+  };
+})();
+
+/* =====================================================================
+   metricas.js  —  Integrante 4
+   Simulación de la cola y cálculo de indicadores.
+
+   Modelo: un solo servidor (una ventanilla / un consultorio), todas las
+   solicitudes disponibles en t = 0, sin interrupciones ni prioridades.
+   Bajo esas condiciones SPT minimiza la espera promedio; fuera de ellas
+   (llegadas escalonadas, urgencias) deja de ser óptimo. Ver README.
+   ===================================================================== */
+
+var Metricas = (function () {
+  'use strict';
+
+  /* -------------------------------------------------------------------
+     simular(): recorrido lineal O(n) sobre una secuencia ya ordenada.
+     Wi = suma de las duraciones que la preceden.
+     ------------------------------------------------------------------- */
+  function simular(secuencia) {
+    var reloj = 0;
+    var esperaTotal = 0;
+    var detalle = [];
+
+    for (var i = 0; i < secuencia.length; i++) {
+      var t = secuencia[i];
+      detalle.push({
+        nombre: t.nombre,
+        duracion: t.duracion,
+        inicio: reloj,        // el momento en que se le atiende
+        espera: reloj,        // como todas llegan en t=0, espera = inicio
+        fin: reloj + t.duracion
+      });
+      esperaTotal += reloj;
+      reloj += t.duracion;
+    }
+
+    var n = secuencia.length;
+
+    return {
+      detalle: detalle,
+      esperaTotal: esperaTotal,
+      esperaPromedio: n > 0 ? esperaTotal / n : 0,
+      // El makespan (instante en que se cierra la cola) es idéntico en
+      // TODAS las estrategias: reordenar no crea ni destruye trabajo.
+      // Lo que cambia es cómo se reparte la espera entre las personas.
+      makespan: reloj,
+      peorEspera: detalle.length > 0 ? detalle[detalle.length - 1].espera : 0
+    };
+  }
+
+  /* -------------------------------------------------------------------
+     ahorro(): porcentaje de reducción, protegido contra división por 0.
+     El código original devolvía "NaN%" con un solo turno en la cola.
+     ------------------------------------------------------------------- */
+  function ahorro(base, optimizado) {
+    if (!isFinite(base) || base <= 0) return 0;
+    var pct = ((base - optimizado) / base) * 100;
+    return Math.max(0, pct);
+  }
+
+  /* -------------------------------------------------------------------
+     comparar(): corre las cuatro estrategias sobre la misma cola.
+     ------------------------------------------------------------------- */
+  function comparar(cola) {
+    var resultadoSpt = Algoritmo.spt(cola);
+    var resultadoLpt = Algoritmo.lpt(cola);
+
+    var estrategias = {
+      fifo: simular(cola.slice()),
+      aleatorio: simular(Algoritmo.barajar(cola)),
+      spt: simular(resultadoSpt.orden),
+      lpt: simular(resultadoLpt.orden)
+    };
+
+    return {
+      estrategias: estrategias,
+      ahorroVsFifo: ahorro(estrategias.fifo.esperaPromedio, estrategias.spt.esperaPromedio),
+      ahorroVsAleatorio: ahorro(estrategias.aleatorio.esperaPromedio, estrategias.spt.esperaPromedio),
+      comparaciones: resultadoSpt.comparaciones,
+      msOrdenamiento: resultadoSpt.ms,
+      n: cola.length
+    };
+  }
+
+  /* -------------------------------------------------------------------
+     Verificación de la cota teórica T = Σ (n - i) · t_i  (i base 1).
+     Debe coincidir exactamente con la espera total simulada; se usa en
+     la sustentación para mostrar que la fórmula y el código concuerdan.
+     ------------------------------------------------------------------- */
+  function esperaTeorica(secuencia) {
+    var n = secuencia.length;
+    var total = 0;
+    for (var i = 0; i < n; i++) {
+      total += (n - (i + 1)) * secuencia[i].duracion;
+    }
+    return total;
+  }
+
+  return {
+    simular: simular,
+    comparar: comparar,
+    ahorro: ahorro,
+    esperaTeorica: esperaTeorica
+  };
+})();
+
+/* =====================================================================
+   graficos.js  —  Integrante 2
+   Visualizaciones: línea de tiempo de la sala de espera, barras
+   comparativas y curva empírica de complejidad.
+   ===================================================================== */
+
+var Graficos = (function () {
+  'use strict';
+
+  var graficoBarras = null;
+  var graficoComplejidad = null;
+  var MAX_FILAS = 12; // más filas que esto se resumen para no romper el layout
+
+  /* Chart.js llega por CDN. Si el equipo está sin conexión, el resto del
+     tablero debe seguir funcionando en vez de romperse con un error. */
+  function hayChart(canvas) {
+    if (typeof Chart !== 'undefined') return true;
+    var aviso = canvas.parentNode.querySelector('.sin-grafico');
+    if (!aviso) {
+      aviso = document.createElement('p');
+      aviso.className = 'sin-grafico';
+      aviso.textContent = 'No se pudo cargar Chart.js. Revisa la conexión: el resto del tablero sigue funcionando.';
+      canvas.parentNode.appendChild(aviso);
+    }
+    return false;
+  }
+
+  /* -------------------------------------------------------------------
+     Línea de tiempo: una fila por persona. El tramo claro es la espera,
+     el tramo sólido es la atención. Ambas columnas comparten la misma
+     escala (el makespan), así la comparación es honesta.
+     ------------------------------------------------------------------- */
+  function renderLineaTiempo(contenedor, resultado, escalaMax) {
+    contenedor.innerHTML = '';
+    var filas = resultado.detalle.slice(0, MAX_FILAS);
+
+    filas.forEach(function (d, indice) {
+      var fila = document.createElement('div');
+      fila.className = 'gantt-fila';
+
+      var etiqueta = document.createElement('span');
+      etiqueta.className = 'gantt-nombre';
+      etiqueta.textContent = (indice + 1) + '. ' + d.nombre;
+      etiqueta.title = d.nombre;
+
+      var pista = document.createElement('div');
+      pista.className = 'gantt-pista';
+
+      var espera = document.createElement('div');
+      espera.className = 'gantt-espera';
+      espera.style.width = porcentaje(d.espera, escalaMax);
+      if (d.espera > 0) espera.textContent = d.espera + '\u2032';
+
+      var atencion = document.createElement('div');
+      atencion.className = 'gantt-atencion';
+      atencion.style.width = porcentaje(d.duracion, escalaMax);
+      atencion.textContent = d.duracion + '\u2032';
+
+      pista.appendChild(espera);
+      pista.appendChild(atencion);
+      fila.appendChild(etiqueta);
+      fila.appendChild(pista);
+      contenedor.appendChild(fila);
+    });
+
+    if (resultado.detalle.length > MAX_FILAS) {
+      var resto = document.createElement('p');
+      resto.className = 'gantt-resto';
+      resto.textContent = 'y ' + (resultado.detalle.length - MAX_FILAS) + ' turnos más en la simulación';
+      contenedor.appendChild(resto);
+    }
+  }
+
+  function porcentaje(valor, total) {
+    if (total <= 0) return '0%';
+    return ((valor / total) * 100).toFixed(3) + '%';
+  }
+
+  /* -------------------------------------------------------------------
+     Barras: espera promedio de las cuatro estrategias.
+     ------------------------------------------------------------------- */
+  function renderComparativa(canvas, estrategias) {
+    if (!hayChart(canvas)) return;
+    if (graficoBarras) graficoBarras.destroy();
+
+    graficoBarras = new Chart(canvas.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: ['Más largo primero', 'Orden aleatorio', 'Orden de llegada', 'Greedy SPT'],
+        datasets: [{
+          data: [
+            estrategias.lpt.esperaPromedio,
+            estrategias.aleatorio.esperaPromedio,
+            estrategias.fifo.esperaPromedio,
+            estrategias.spt.esperaPromedio
+          ],
+          backgroundColor: ['#8C2F26', '#C0463B', '#D99A2B', '#1E7A6A'],
+          borderRadius: 2,
+          maxBarThickness: 54
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 350 },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function (ctx) { return ctx.parsed.y.toFixed(1) + ' min de espera promedio'; }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Minutos de espera promedio' },
+            grid: { color: '#E7E3DA' }
+          },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  /* -------------------------------------------------------------------
+     Complejidad: tiempo real medido contra la curva n·log n escalada.
+     Si ambas series se superponen, el comportamiento es O(n log n).
+     ------------------------------------------------------------------- */
+  function renderComplejidad(canvas, mediciones) {
+    if (!hayChart(canvas)) return;
+    if (graficoComplejidad) graficoComplejidad.destroy();
+
+    graficoComplejidad = new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: mediciones.map(function (m) { return m.n.toLocaleString('es-CO'); }),
+        datasets: [
+          {
+            label: 'Tiempo medido (ms)',
+            data: mediciones.map(function (m) { return m.ms; }),
+            borderColor: '#1E7A6A',
+            backgroundColor: '#1E7A6A',
+            tension: 0.25,
+            pointRadius: 3
+          },
+          {
+            label: 'Curva n·log n (escalada)',
+            data: mediciones.map(function (m) { return m.teoricoEscalado; }),
+            borderColor: '#9A958A',
+            borderDash: [5, 4],
+            pointRadius: 0,
+            tension: 0.25
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: 'Milisegundos' }, grid: { color: '#E7E3DA' } },
+          x: { title: { display: true, text: 'Cantidad de turnos (n)' }, grid: { display: false } }
+        }
+      }
+    });
+  }
+
+  return {
+    renderLineaTiempo: renderLineaTiempo,
+    renderComparativa: renderComparativa,
+    renderComplejidad: renderComplejidad
+  };
+})();
+
+/* =====================================================================
+   ui.js  —  Integrante 1
+   Estado de la cola y pintado de la interfaz.
+
+   Todo el texto que escribe la persona se inserta con textContent, no
+   con innerHTML: un nombre como <img onerror=...> no debe ejecutarse.
+   ===================================================================== */
+
+var UI = (function () {
+  'use strict';
+
+  var cola = [];
+  var secuencia = 1;
+
+  var el = {};
+
+  function init() {
+    el.formulario = document.getElementById('formulario');
+    el.nombre = document.getElementById('nombre');
+    el.duracion = document.getElementById('duracion');
+    el.error = document.getElementById('error');
+    el.lista = document.getElementById('lista');
+    el.conteo = document.getElementById('conteo');
+    el.btnSimular = document.getElementById('btnSimular');
+    el.btnVaciar = document.getElementById('btnVaciar');
+    el.btnEjemplo = document.getElementById('btnEjemplo');
+    el.btnComplejidad = document.getElementById('btnComplejidad');
+    el.ahorro = document.getElementById('ahorro');
+    el.esperaFifo = document.getElementById('esperaFifo');
+    el.esperaSpt = document.getElementById('esperaSpt');
+    el.esperaAleatorio = document.getElementById('esperaAleatorio');
+    el.makespan = document.getElementById('makespan');
+    el.comparaciones = document.getElementById('comparaciones');
+    el.ganttFifo = document.getElementById('ganttFifo');
+    el.ganttSpt = document.getElementById('ganttSpt');
+    el.leyendaFifo = document.getElementById('leyendaFifo');
+    el.leyendaSpt = document.getElementById('leyendaSpt');
+    el.tablaFifo = document.getElementById('tablaFifo');
+    el.tablaSpt = document.getElementById('tablaSpt');
+    el.resultados = document.getElementById('resultados');
+    el.canvasBarras = document.getElementById('canvasBarras');
+    el.canvasComplejidad = document.getElementById('canvasComplejidad');
+    el.notaComplejidad = document.getElementById('notaComplejidad');
+    el.escenarios = document.getElementById('escenarios');
+    el.descripcionEscenario = document.getElementById('descripcionEscenario');
+    el.lote = document.getElementById('lote');
+    el.errorLote = document.getElementById('errorLote');
+    el.btnAgregarLote = document.getElementById('btnAgregarLote');
+    el.btnReemplazarLote = document.getElementById('btnReemplazarLote');
+    el.btnAleatoria = document.getElementById('btnAleatoria');
+  }
+
+  /* ---------------------- estado de la cola ------------------------ */
+
+  function agregar(nombre, duracion) {
+    cola.push({ id: secuencia++, nombre: nombre, duracion: duracion });
+  }
+
+  function eliminar(id) {
+    cola = cola.filter(function (t) { return t.id !== id; });
+  }
+
+  function vaciar() {
+    cola = [];
+  }
+
+  function cargarEjemplo() {
+    reemplazar(Escenarios.obtener('clinica'));
+  }
+
+  /* Agrega una lista completa al final de la cola. */
+  function agregarVarios(turnos) {
+    turnos.forEach(function (t) { agregar(t.nombre, t.duracion); });
+  }
+
+  /* Descarta la cola actual y la sustituye por la lista recibida. */
+  function reemplazar(turnos) {
+    cola = turnos.map(function (t) {
+      return { id: secuencia++, nombre: t.nombre, duracion: t.duracion };
+    });
+  }
+
+  function obtenerCola() {
+    return cola;
+  }
+
+  /* --------------------- validación del formulario ------------------ */
+
+  function leerFormulario() {
+    var nombre = el.nombre.value.trim();
+    var duracion = Number(el.duracion.value);
+
+    if (nombre === '') {
+      return { ok: false, mensaje: 'Escribe el nombre o el tipo de turno.' };
+    }
+    if (nombre.length > 60) {
+      return { ok: false, mensaje: 'El nombre no puede superar los 60 caracteres.' };
+    }
+    if (!Number.isInteger(duracion) || duracion <= 0) {
+      return { ok: false, mensaje: 'La duración debe ser un número entero de minutos mayor que cero.' };
+    }
+    if (duracion > 600) {
+      return { ok: false, mensaje: 'La duración máxima admitida es de 600 minutos.' };
+    }
+    return { ok: true, nombre: nombre, duracion: duracion };
+  }
+
+  function mostrarError(mensaje) {
+    el.error.textContent = mensaje;
+    el.error.hidden = false;
+  }
+
+  function limpiarError() {
+    el.error.textContent = '';
+    el.error.hidden = true;
+  }
+
+  /* --------------------- carga por lote y escenarios ---------------- */
+
+  function renderEscenarios(alElegir) {
+    el.escenarios.innerHTML = '';
+
+    Escenarios.listar().forEach(function (e) {
+      var boton = document.createElement('button');
+      boton.type = 'button';
+      boton.className = 'ficha-escenario';
+      boton.textContent = e.etiqueta;
+      boton.title = e.descripcion;
+      boton.addEventListener('click', function () {
+        el.descripcionEscenario.textContent = e.descripcion;
+        alElegir(e.clave);
+      });
+      el.escenarios.appendChild(boton);
+    });
+  }
+
+  function leerLote() {
+    var lectura = Escenarios.parsear(el.lote.value);
+
+    if (lectura.turnos.length === 0) {
+      var motivo = lectura.errores.length > 0
+        ? lectura.errores.join(' ')
+        : 'Escribe al menos un turno con el formato: nombre, minutos.';
+      return { ok: false, mensaje: motivo };
+    }
+
+    return { ok: true, turnos: lectura.turnos, avisos: lectura.errores };
+  }
+
+  function mostrarErrorLote(mensaje) {
+    el.errorLote.textContent = mensaje;
+    el.errorLote.hidden = false;
+  }
+
+  function limpiarErrorLote() {
+    el.errorLote.textContent = '';
+    el.errorLote.hidden = true;
+  }
+
+  function limpiarLote() {
+    el.lote.value = '';
+  }
+
+  function limpiarFormulario() {
+    el.formulario.reset();
+    el.nombre.focus();
+  }
+
+  /* ------------------------- renderizado ---------------------------- */
+
+  function renderCola(alEliminar) {
+    el.lista.innerHTML = '';
+    el.conteo.textContent = cola.length;
+    el.btnSimular.disabled = cola.length === 0;
+
+    if (cola.length === 0) {
+      var vacio = document.createElement('li');
+      vacio.className = 'vacio';
+      vacio.textContent = 'La cola está vacía. Agrega un turno o carga el caso de ejemplo.';
+      el.lista.appendChild(vacio);
+      return;
+    }
+
+    var fragmento = document.createDocumentFragment();
+
+    cola.forEach(function (t, i) {
+      var li = document.createElement('li');
+
+      var orden = document.createElement('span');
+      orden.className = 'turno-orden';
+      orden.textContent = i + 1;
+
+      var nombre = document.createElement('span');
+      nombre.className = 'turno-nombre';
+      nombre.textContent = t.nombre;
+
+      var minutos = document.createElement('span');
+      minutos.className = 'turno-minutos';
+      minutos.textContent = t.duracion + ' min';
+
+      var quitar = document.createElement('button');
+      quitar.type = 'button';
+      quitar.className = 'turno-quitar';
+      quitar.textContent = '\u00D7';
+      quitar.setAttribute('aria-label', 'Quitar ' + t.nombre + ' de la cola');
+      quitar.addEventListener('click', function () { alEliminar(t.id); });
+
+      li.appendChild(orden);
+      li.appendChild(nombre);
+      li.appendChild(minutos);
+      li.appendChild(quitar);
+      fragmento.appendChild(li);
+    });
+
+    el.lista.appendChild(fragmento);
+  }
+
+  function renderResultados(comparacion) {
+    var e = comparacion.estrategias;
+    var escala = Math.max(e.fifo.makespan, e.spt.makespan, 1);
+
+    el.resultados.hidden = false;
+
+    el.ahorro.textContent = comparacion.ahorroVsFifo.toFixed(1) + '%';
+    el.esperaFifo.textContent = e.fifo.esperaPromedio.toFixed(1);
+    el.esperaSpt.textContent = e.spt.esperaPromedio.toFixed(1);
+    el.esperaAleatorio.textContent = e.aleatorio.esperaPromedio.toFixed(1);
+    el.makespan.textContent = e.spt.makespan;
+    el.comparaciones.textContent = comparacion.comparaciones;
+
+    el.leyendaFifo.textContent = 'espera promedio ' + e.fifo.esperaPromedio.toFixed(1) +
+      ' min · espera total ' + e.fifo.esperaTotal + ' min';
+    el.leyendaSpt.textContent = 'espera promedio ' + e.spt.esperaPromedio.toFixed(1) +
+      ' min · espera total ' + e.spt.esperaTotal + ' min';
+
+    Graficos.renderLineaTiempo(el.ganttFifo, e.fifo, escala);
+    Graficos.renderLineaTiempo(el.ganttSpt, e.spt, escala);
+    Graficos.renderComparativa(el.canvasBarras, e);
+
+    renderTabla(el.tablaFifo, e.fifo);
+    renderTabla(el.tablaSpt, e.spt);
+  }
+
+  function renderTabla(tbody, resultado) {
+    tbody.innerHTML = '';
+    var fragmento = document.createDocumentFragment();
+
+    resultado.detalle.forEach(function (d) {
+      var tr = document.createElement('tr');
+      tr.appendChild(celda(d.nombre));
+      tr.appendChild(celda(d.duracion, 'num'));
+      tr.appendChild(celda(d.espera, 'num'));
+      tr.appendChild(celda(d.fin, 'num'));
+      fragmento.appendChild(tr);
+    });
+
+    var total = document.createElement('tr');
+    total.className = 'fila-total';
+    total.appendChild(celda('Espera total'));
+    total.appendChild(celda('', 'num'));
+    total.appendChild(celda(resultado.esperaTotal, 'num'));
+    total.appendChild(celda('', 'num'));
+    fragmento.appendChild(total);
+
+    tbody.appendChild(fragmento);
+  }
+
+  function celda(valor, clase) {
+    var td = document.createElement('td');
+    td.textContent = valor;
+    if (clase) td.className = clase;
+    return td;
+  }
+
+  function renderComplejidad(mediciones) {
+    Graficos.renderComplejidad(el.canvasComplejidad, mediciones);
+    var ultima = mediciones[mediciones.length - 1];
+    el.notaComplejidad.textContent =
+      'Con n = ' + ultima.n.toLocaleString('es-CO') + ' el ordenamiento tomó ' +
+      ultima.ms.toFixed(1) + ' ms y realizó ' + ultima.comparaciones.toLocaleString('es-CO') +
+      ' comparaciones.';
+  }
+
+  function referencias() {
+    return el;
+  }
+
+  return {
+    init: init,
+    agregar: agregar,
+    eliminar: eliminar,
+    vaciar: vaciar,
+    cargarEjemplo: cargarEjemplo,
+    agregarVarios: agregarVarios,
+    reemplazar: reemplazar,
+    renderEscenarios: renderEscenarios,
+    leerLote: leerLote,
+    mostrarErrorLote: mostrarErrorLote,
+    limpiarErrorLote: limpiarErrorLote,
+    limpiarLote: limpiarLote,
+    obtenerCola: obtenerCola,
+    leerFormulario: leerFormulario,
+    mostrarError: mostrarError,
+    limpiarError: limpiarError,
+    limpiarFormulario: limpiarFormulario,
+    renderCola: renderCola,
+    renderResultados: renderResultados,
+    renderComplejidad: renderComplejidad,
+    referencias: referencias
+  };
+})();
+
+/* =====================================================================
+   main.js  —  Integrante 1
+   Orquestación: escucha los eventos de la interfaz y coordina los
+   módulos de algoritmo, métricas y gráficos.
+   ===================================================================== */
+
+(function () {
+  'use strict';
+
+  document.addEventListener('DOMContentLoaded', function () {
+    UI.init();
+    var el = UI.referencias();
+
+    UI.cargarEjemplo();
+    pintarCola();
+    simular(); // el tablero arranca con el caso del enunciado ya resuelto
+
+    el.formulario.addEventListener('submit', function (evento) {
+      evento.preventDefault();
+      var datos = UI.leerFormulario();
+
+      if (!datos.ok) {
+        UI.mostrarError(datos.mensaje);
+        return;
+      }
+
+      UI.limpiarError();
+      UI.agregar(datos.nombre, datos.duracion);
+      UI.limpiarFormulario();
+      pintarCola();
+    });
+
+    el.btnSimular.addEventListener('click', simular);
+
+    el.btnEjemplo.addEventListener('click', function () {
+      UI.cargarEjemplo();
+      UI.limpiarError();
+      pintarCola();
+      simular();
+    });
+
+    el.btnVaciar.addEventListener('click', function () {
+      UI.vaciar();
+      UI.limpiarError();
+      pintarCola();
+      el.resultados.hidden = true;
+    });
+
+    UI.renderEscenarios(function (clave) {
+      UI.reemplazar(Escenarios.obtener(clave));
+      UI.limpiarErrorLote();
+      pintarCola();
+      simular();
+    });
+
+    el.btnAgregarLote.addEventListener('click', function () {
+      var lectura = UI.leerLote();
+      if (!lectura.ok) { UI.mostrarErrorLote(lectura.mensaje); return; }
+
+      UI.agregarVarios(lectura.turnos);
+      avisar(lectura);
+      UI.limpiarLote();
+      pintarCola();
+      simular();
+    });
+
+    el.btnReemplazarLote.addEventListener('click', function () {
+      var lectura = UI.leerLote();
+      if (!lectura.ok) { UI.mostrarErrorLote(lectura.mensaje); return; }
+
+      UI.reemplazar(lectura.turnos);
+      avisar(lectura);
+      UI.limpiarLote();
+      pintarCola();
+      simular();
+    });
+
+    el.btnAleatoria.addEventListener('click', function () {
+      UI.reemplazar(Escenarios.aleatorio(20, 5, 120));
+      UI.limpiarErrorLote();
+      el.descripcionEscenario.textContent = 'Cola sintética de 20 turnos con duraciones entre 5 y 120 minutos.';
+      pintarCola();
+      simular();
+    });
+
+    /* Las líneas mal escritas no bloquean la carga: se avisan y las
+       demás entran igual. */
+    function avisar(lectura) {
+      if (lectura.avisos.length > 0) {
+        UI.mostrarErrorLote('Se cargaron ' + lectura.turnos.length +
+          ' turnos. ' + lectura.avisos.join(' '));
+      } else {
+        UI.limpiarErrorLote();
+      }
+    }
+
+    el.btnComplejidad.addEventListener('click', function () {
+      el.btnComplejidad.disabled = true;
+      el.btnComplejidad.textContent = 'Midiendo…';
+
+      // Cedemos un frame para que el navegador pinte el estado del botón
+      // antes de bloquear el hilo con la medición.
+      requestAnimationFrame(function () {
+        var mediciones = Algoritmo.benchmark([1000, 5000, 10000, 25000, 50000, 100000]);
+        UI.renderComplejidad(mediciones);
+        el.btnComplejidad.disabled = false;
+        el.btnComplejidad.textContent = 'Medir de nuevo';
+      });
+    });
+
+    function pintarCola() {
+      UI.renderCola(function (id) {
+        UI.eliminar(id);
+        pintarCola();
+        if (UI.obtenerCola().length > 0) {
+          simular();
+        } else {
+          el.resultados.hidden = true;
+        }
+      });
+    }
+
+    function simular() {
+      var cola = UI.obtenerCola();
+      if (cola.length === 0) return;
+      UI.renderResultados(Metricas.comparar(cola));
+    }
+  });
+})();
+
+</script>
+</body>
+</html>
