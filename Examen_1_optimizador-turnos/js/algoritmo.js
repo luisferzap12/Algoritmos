@@ -34,4 +34,64 @@ var Algoritmo = (function () {
 
     return resultado;
   }
+
+  /* -------------------------------------------------------------------
+     Criterios de comparación
+     ------------------------------------------------------------------- */
+  var porDuracionAsc = function (a, b) {
+    return a.duracion - b.duracion;
+  };
+  var porDuracionDesc = function (a, b) {
+    return b.duracion - a.duracion;
+  };
+
+  /* -------------------------------------------------------------------
+     ordenar(): envoltura instrumentada. Devuelve el orden resultante,
+     el número de comparaciones y el tiempo de ejecución medido.
+     ------------------------------------------------------------------- */
+  function ordenar(tareas, comparar) {
+    var contador = { comparaciones: 0 };
+    var inicio = performance.now();
+    var orden = mergeSort(tareas.slice(), comparar, contador);
+    var fin = performance.now();
+
+    return {
+      orden: orden,
+      comparaciones: contador.comparaciones,
+      ms: fin - inicio,
+    };
+  }
+
+  /* -------------------------------------------------------------------
+     ELECCIÓN VORAZ (greedy choice):
+     en cada paso se atiende la tarea pendiente de menor duración.
+     Ordenar ascendentemente por duración equivale a aplicar esa
+     elección n veces, y por el argumento de intercambio es el óptimo
+     global para minimizar la espera promedio.
+     ------------------------------------------------------------------- */
+  function spt(tareas) {
+    return ordenar(tareas, porDuracionAsc);
+  }
+
+  /* Contraejemplo deliberado: la elección voraz invertida (la tarea más
+     larga primero) produce el PEOR orden posible. Sirve para demostrar
+     que el criterio de la elección es lo que hace óptimo al algoritmo. */
+  function lpt(tareas) {
+    return ordenar(tareas, porDuracionDesc);
+  }
+
+  /* -------------------------------------------------------------------
+     Barajado Fisher-Yates, O(n): genera el "orden aleatorio" contra el
+     que el examen pide comparar.
+     ------------------------------------------------------------------- */
+  function barajar(tareas) {
+    var copia = tareas.slice();
+    for (var i = copia.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = copia[i];
+      copia[i] = copia[j];
+      copia[j] = tmp;
+    }
+    return copia;
+  }
 })();
