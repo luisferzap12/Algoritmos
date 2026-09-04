@@ -2,11 +2,11 @@
 
 Tablero web que reorganiza una cola de atención con el algoritmo voraz **Shortest Processing Time First (SPT)** y muestra, sobre la misma cola, cuánta espera se ahorra frente al orden de llegada y frente a un orden aleatorio.
 
-Examen 1 · Análisis de Algoritmos · Institución Universitaria Pascual Bravo
+Examen 1 · Análisis de Algoritmos · Institución Universitaria ITM
 Fecha de entrega: 2 de septiembre de 2026
 
 **Video de sustentación:** _(pegar aquí la URL de YouTube o Loom antes de la entrega)_
-**Demo en línea:** _(opcional — GitHub Pages: Settings → Pages → Deploy from branch → main / root)_
+Demo en línea: https://luisferzap12.github.io/Algoritmos/Examen_1_optimizador-turnos/
 
 ---
 
@@ -107,5 +107,5 @@ optimizador-turnos/
 | Juan Andrés Gallego | Merge Sort instrumentado, elección voraz SPT, contraejemplo LPT, benchmark y juegos de datos | `js/algoritmo.js`, `js/escenarios.js` |
 | Jorge Elias Builes| Simulación de la cola, indicadores, documentación y video | `js/metricas.js`, `README.md`,  |
 
-Cada quien hace sus propios commits desde su cuenta de GitHub. El detalle está en [`docs/guia-git.md`](docs/guia-git.md).
+Cada quien hace sus propios commits desde su cuenta de GitHub. 
 
