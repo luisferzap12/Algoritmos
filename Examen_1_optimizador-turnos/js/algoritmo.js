@@ -94,4 +94,53 @@ var Algoritmo = (function () {
     }
     return copia;
   }
+
+  /* -------------------------------------------------------------------
+     Banco de pruebas empírico: mide el tiempo real de ordenamiento para
+     tamaños crecientes de n y lo contrasta con la curva teórica
+     c · n · log2(n). Es la evidencia experimental de la complejidad.
+     ------------------------------------------------------------------- */
+  function benchmark(tamanos) {
+    var mediciones = [];
+
+    for (var k = 0; k < tamanos.length; k++) {
+      var n = tamanos[k];
+      var sinteticas = [];
+      for (var i = 0; i < n; i++) {
+        sinteticas.push({
+          id: i,
+          nombre: "t" + i,
+          duracion: 1 + Math.floor(Math.random() * 240),
+        });
+      }
+      var r = spt(sinteticas);
+      mediciones.push({
+        n: n,
+        ms: r.ms,
+        comparaciones: r.comparaciones,
+        teorico: n * Math.log2(n), // n·log n sin constante
+      });
+    }
+
+    // Escalamos la curva teórica al último punto medido para poder
+    // superponerla con los tiempos reales en la misma gráfica.
+    var ultima = mediciones[mediciones.length - 1];
+    var escala = ultima.teorico > 0 ? ultima.ms / ultima.teorico : 0;
+    for (var m = 0; m < mediciones.length; m++) {
+      mediciones[m].teoricoEscalado = mediciones[m].teorico * escala;
+    }
+
+    return mediciones;
+  }
+
+  return {
+    mergeSort: mergeSort,
+    ordenar: ordenar,
+    spt: spt,
+    lpt: lpt,
+    barajar: barajar,
+    benchmark: benchmark,
+    porDuracionAsc: porDuracionAsc,
+    porDuracionDesc: porDuracionDesc,
+  };
 })();
