@@ -1,5 +1,5 @@
 /* =====================================================================
-   ui.js  —  Integrante 1
+   ui.js  —  Luis Fernando Zapata Castaño
    Estado de la cola y pintado de la interfaz.
 
    Todo el texto que escribe la persona se inserta con textContent, no
