@@ -1,5 +1,5 @@
 /* =====================================================================
-   main.js  —  Integrante 1
+   main.js  —  Luis Fernando Zapata 
    Orquestación: escucha los eventos de la interfaz y coordina los
    módulos de algoritmo, métricas y gráficos.
    ===================================================================== */
