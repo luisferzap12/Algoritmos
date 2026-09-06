@@ -5,8 +5,8 @@ Tablero web que reorganiza una cola de atención con el algoritmo voraz **Shorte
 Examen 1 · Análisis de Algoritmos · Institución Universitaria ITM
 Fecha de entrega: 2 de septiembre de 2026
 
-**Video de sustentación:** _(pegar aquí la URL de YouTube o Loom antes de la entrega)_
-Demo en línea: https://luisferzap12.github.io/Algoritmos/Examen_1_optimizador-turnos/
+Video de sustentación: https://canva.link/6ku7xsxd0ly8a4o
+App en línea: https://luisferzap12.github.io/Algoritmos/Examen_1_optimizador-turnos/
 
 ---
 
@@ -106,6 +106,3 @@ optimizador-turnos/
 | luz Mallely Zapata| Identidad visual, responsive y las tres visualizaciones | `css/estilos.css`, `js/graficos.js` |
 | Juan Andrés Gallego | Merge Sort instrumentado, elección voraz SPT, contraejemplo LPT, benchmark y juegos de datos | `js/algoritmo.js`, `js/escenarios.js` |
 | Jorge Elias Builes| Simulación de la cola, indicadores, documentación y video | `js/metricas.js`, `README.md`,  |
-
-Cada quien hace sus propios commits desde su cuenta de GitHub. 
-
