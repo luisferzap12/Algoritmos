@@ -37,11 +37,16 @@ var Mapa = (function () {
       var A = grafo.nodos[a];
       var B = grafo.nodos[b];
 
-      var clase = enRuta(a, b) ? "via ruta" : "via";
+      var perteneceARuta = enRuta(a, b);
+
+      // FIX: el CSS define los modificadores en formato BEM
+      // (.via--ruta, .peso--ruta), no como clase suelta ".ruta".
+      var claseVia = perteneceARuta ? "via via--ruta" : "via";
+      var clasePeso = perteneceARuta ? "peso peso--ruta" : "peso";
 
       html +=
         '<line class="' +
-        clase +
+        claseVia +
         '" x1="' +
         A.x +
         '" y1="' +
@@ -53,7 +58,9 @@ var Mapa = (function () {
         '" />';
 
       html +=
-        '<text class="peso" x="' +
+        '<text class="' +
+        clasePeso +
+        '" x="' +
         (A.x + B.x) / 2 +
         '" y="' +
         ((A.y + B.y) / 2 - 6) +
@@ -66,11 +73,15 @@ var Mapa = (function () {
     Grafo.listaNodos(grafo).forEach(function (id) {
       var nodo = grafo.nodos[id];
 
-      var clase = ruta.indexOf(id) !== -1 ? "nodo ruta" : "nodo";
+      var perteneceARuta = ruta.indexOf(id) !== -1;
+
+      // FIX: mismo caso — "nodo--ruta" y "nombre--ruta", no clases sueltas.
+      var claseNodo = perteneceARuta ? "nodo nodo--ruta" : "nodo";
+      var claseNombre = perteneceARuta ? "nombre nombre--ruta" : "nombre";
 
       html +=
         '<circle class="' +
-        clase +
+        claseNodo +
         '" cx="' +
         nodo.x +
         '" cy="' +
@@ -78,7 +89,9 @@ var Mapa = (function () {
         '" r="12" />';
 
       html +=
-        '<text class="nombre" x="' +
+        '<text class="' +
+        claseNombre +
+        '" x="' +
         nodo.x +
         '" y="' +
         (nodo.y + 30) +
