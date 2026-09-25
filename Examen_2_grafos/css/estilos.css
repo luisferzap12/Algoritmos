@@ -1,0 +1,640 @@
+/* =====================================================================
+   estilos.css  —  Integrante 1
+   Misma familia visual del Examen 1: papel, tinta y un verde para lo
+   óptimo. Aquí el verde marca la ruta y el ámbar los nodos que el
+   algoritmo alcanzó a visitar.
+   ===================================================================== */
+
+:root {
+  --papel: #fbfaf8;
+  --panel: #ffffff;
+  --tinta: #16212b;
+  --tinta-suave: #5c6670;
+  --linea: #e2ded5;
+  --alerta: #c0463b;
+  --alerta-fondo: #f1dcd8;
+  --ruta: #1e7a6a;
+  --ruta-fondo: #e4efec;
+  --visitado: #d99a2b;
+
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Courier New", monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.2;
+}
+p {
+  margin: 0;
+}
+
+.envoltorio {
+  width: min(1240px, 100% - 3rem);
+  margin-inline: auto;
+}
+
+/* ---------------------------- encabezado --------------------------- */
+
+.encabezado {
+  border-bottom: 1px solid var(--linea);
+  background: var(--panel);
+  padding-block: 1.6rem;
+}
+
+.encabezado-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.encabezado h1 {
+  font-size: 1.65rem;
+  letter-spacing: -0.02em;
+}
+
+.encabezado p {
+  color: var(--tinta-suave);
+  font-size: 0.95rem;
+  max-width: 62ch;
+  margin-top: 0.3rem;
+}
+
+.sello {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--tinta-suave);
+  border: 1px solid var(--linea);
+  border-radius: 2px;
+  padding: 0.3rem 0.6rem;
+  white-space: nowrap;
+}
+
+main {
+  padding-block: 2rem 3rem;
+}
+
+/* ------------------------------ paneles ---------------------------- */
+
+.tablero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 1.4rem;
+  align-items: start;
+}
+
+.tablero--secundario {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  margin-top: 1.4rem;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--linea);
+  border-radius: 3px;
+  padding: 1.3rem;
+}
+
+.panel > h2 {
+  font-size: 1.08rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--linea);
+  margin-bottom: 0.9rem;
+}
+
+.panel--ancho {
+  margin-top: 1.4rem;
+}
+
+.panel-cabecera {
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--linea);
+  margin-bottom: 0.9rem;
+}
+
+.panel-cabecera h2 {
+  font-size: 1.08rem;
+  margin-bottom: 0.3rem;
+}
+
+.panel-cabecera--fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.nota {
+  color: var(--tinta-suave);
+  font-size: 0.83rem;
+  max-width: 92ch;
+}
+.nota--medicion {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  margin-top: 0.8rem;
+}
+
+/* ------------------------------- mapa ------------------------------ */
+
+#mapa {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.via {
+  stroke: #cfcabf;
+  stroke-width: 2;
+}
+.via--ruta {
+  stroke: var(--ruta);
+  stroke-width: 4;
+}
+
+.peso-fondo {
+  fill: var(--panel);
+  stroke: var(--linea);
+  stroke-width: 0.6;
+}
+.peso-fondo--ruta {
+  fill: var(--ruta-fondo);
+  stroke: var(--ruta);
+}
+
+.peso {
+  font-family: var(--mono);
+  font-size: 11px;
+  fill: var(--tinta-suave);
+}
+.peso--ruta {
+  fill: var(--ruta);
+  font-weight: 500;
+}
+
+.nodo {
+  fill: var(--panel);
+  stroke: var(--tinta);
+  stroke-width: 2;
+}
+.nodo--visitado {
+  fill: var(--visitado);
+  stroke: var(--visitado);
+}
+.nodo--ruta {
+  fill: var(--ruta);
+  stroke: var(--ruta);
+}
+
+.orden-visita {
+  font-family: var(--mono);
+  font-size: 10px;
+  fill: #ffffff;
+  font-weight: 500;
+}
+
+.nombre {
+  font-family: var(--sans);
+  font-size: 12px;
+  fill: var(--tinta-suave);
+  /* Halo del color del panel para que el nombre se lea aunque pase una vía por debajo. */
+  paint-order: stroke;
+  stroke: var(--panel);
+  stroke-width: 3.5px;
+  stroke-linejoin: round;
+}
+.nombre--ruta {
+  fill: var(--tinta);
+  font-weight: 500;
+}
+
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.1rem;
+  list-style: none;
+  margin: 0.8rem 0 0;
+  padding: 0.7rem 0 0;
+  border-top: 1px solid var(--linea);
+  font-size: 0.78rem;
+  color: var(--tinta-suave);
+}
+
+.leyenda li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.marca {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.marca--ruta {
+  background: var(--ruta);
+}
+.marca--visitado {
+  background: var(--visitado);
+}
+.marca--peso {
+  background: var(--panel);
+  border: 1px solid var(--linea);
+  border-radius: 2px;
+}
+
+/* ---------------------------- formulario --------------------------- */
+
+.campos-par {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+
+.campo {
+  margin-bottom: 0.9rem;
+}
+
+.campo label,
+.etiqueta-bloque {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--tinta-suave);
+  margin-bottom: 0.3rem;
+}
+
+.etiqueta-bloque {
+  margin-top: 0.3rem;
+}
+
+.campo select {
+  width: 100%;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid var(--linea);
+  border-radius: 2px;
+  background: var(--papel);
+  font-family: var(--sans);
+  font-size: 0.92rem;
+  color: var(--tinta);
+}
+
+.campo select:focus-visible,
+.boton:focus-visible,
+.ficha:focus-visible {
+  outline: 2px solid var(--tinta);
+  outline-offset: 2px;
+}
+
+.escenarios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.ficha {
+  background: var(--papel);
+  border: 1px solid var(--linea);
+  border-radius: 2px;
+  padding: 0.3rem 0.55rem;
+  font-family: var(--sans);
+  font-size: 0.76rem;
+  color: var(--tinta);
+  cursor: pointer;
+}
+
+.ficha:hover {
+  border-color: var(--tinta);
+}
+.ficha--activa {
+  background: var(--tinta);
+  border-color: var(--tinta);
+  color: #ffffff;
+}
+
+.descripcion-escenario {
+  font-size: 0.79rem;
+  color: var(--ruta);
+  min-height: 2.4rem;
+  margin-top: 0.5rem;
+}
+
+.boton {
+  width: 100%;
+  padding: 0.68rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  font-family: var(--sans);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 140ms ease;
+}
+
+.boton--tinta {
+  background: var(--tinta);
+  color: #ffffff;
+}
+.boton--tinta:hover {
+  background: #24333f;
+}
+.boton--optimo {
+  background: var(--ruta);
+  color: #ffffff;
+}
+.boton--optimo:hover {
+  background: #196356;
+}
+.boton--compacto {
+  width: auto;
+  white-space: nowrap;
+}
+
+.boton:disabled {
+  background: var(--papel);
+  border-color: var(--linea);
+  color: #a8a49c;
+  cursor: not-allowed;
+}
+
+.error {
+  color: var(--alerta);
+  font-size: 0.82rem;
+  margin-top: 0.7rem;
+}
+
+/* ---------------------------- resultado ---------------------------- */
+
+.resultado {
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--linea);
+}
+
+.ruta-total {
+  font-family: var(--mono);
+  font-size: 2.5rem;
+  font-weight: 500;
+  color: var(--ruta);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.unidad {
+  font-size: 0.85rem;
+  color: var(--tinta-suave);
+  font-weight: 400;
+}
+
+.ruta-secuencia {
+  font-size: 0.88rem;
+  margin-top: 0.45rem;
+  color: var(--tinta);
+}
+
+.indicadores {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 1.1rem 0 0;
+  border-top: 1px solid var(--linea);
+}
+
+.indicador {
+  padding: 0.75rem 0.7rem 0.75rem 0;
+  border-right: 1px solid var(--linea);
+}
+.indicador:last-child {
+  border-right: 0;
+}
+.indicador dt {
+  font-size: 0.72rem;
+  color: var(--tinta-suave);
+}
+
+.indicador dd {
+  margin: 0.2rem 0 0;
+  font-family: var(--mono);
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.comparativa {
+  margin-top: 1.1rem;
+  padding: 0.8rem 0.9rem;
+  background: var(--alerta-fondo);
+  border-left: 3px solid var(--alerta);
+  border-radius: 2px;
+}
+
+.comparativa h3 {
+  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
+}
+.comparativa .nota {
+  color: #7a3a33;
+}
+
+/* ------------------------------ pasos ------------------------------ */
+
+.pasos {
+  list-style: none;
+  counter-reset: paso;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  max-height: 22rem;
+  overflow-y: auto;
+  font-size: 0.83rem;
+}
+
+.paso {
+  counter-increment: paso;
+  padding: 0.4rem 0 0.4rem 2.1rem;
+  border-bottom: 1px solid #f0ede7;
+  position: relative;
+}
+
+.paso::before {
+  content: counter(paso);
+  position: absolute;
+  left: 0;
+  top: 0.4rem;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  color: #a8a49c;
+}
+
+.paso--visita {
+  font-weight: 500;
+}
+.paso--mejora {
+  color: var(--ruta);
+}
+.paso--descarta {
+  color: var(--tinta-suave);
+}
+.paso--fin {
+  font-weight: 500;
+  color: var(--ruta);
+}
+
+/* ------------------------------ tablas ----------------------------- */
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.tabla th {
+  text-align: left;
+  font-weight: 500;
+  color: var(--tinta-suave);
+  padding: 0.4rem 0.35rem;
+  border-bottom: 1px solid var(--linea);
+}
+
+.tabla td {
+  padding: 0.38rem 0.35rem;
+  border-bottom: 1px solid #f0ede7;
+}
+
+.tabla .num {
+  text-align: right;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.fila--ruta {
+  background: var(--ruta-fondo);
+}
+.fila--discrepancia {
+  background: var(--alerta-fondo);
+}
+.tabla--compacta {
+  max-width: 520px;
+}
+
+/* ---------------------------- gráficas ----------------------------- */
+
+.lienzo {
+  position: relative;
+  height: 290px;
+  margin-top: 1rem;
+}
+
+.sin-grafico {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.82rem;
+  color: var(--tinta-suave);
+  background: var(--papel);
+  border: 1px dashed var(--linea);
+}
+
+.salida-negativos {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+/* --------------------------- fundamento ---------------------------- */
+
+.fundamento {
+  margin-top: 2.2rem;
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--linea);
+  max-width: 76ch;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.fundamento h2 {
+  font-size: 1.05rem;
+}
+.fundamento p {
+  font-size: 0.92rem;
+}
+
+.pie {
+  border-top: 1px solid var(--linea);
+  padding-block: 1.1rem;
+  font-size: 0.79rem;
+  color: var(--tinta-suave);
+  background: var(--panel);
+}
+
+/* --------------------------- responsive ---------------------------- */
+
+@media (max-width: 1000px) {
+  .tablero,
+  .tablero--secundario {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px) {
+  .envoltorio {
+    width: min(1240px, 100% - 1.6rem);
+  }
+  .encabezado h1 {
+    font-size: 1.35rem;
+  }
+  .campos-par {
+    grid-template-columns: 1fr;
+  }
+  .indicadores {
+    grid-template-columns: 1fr;
+  }
+  .indicador {
+    border-right: 0;
+    border-bottom: 1px solid var(--linea);
+  }
+  .ruta-total {
+    font-size: 2rem;
+  }
+  .boton--compacto {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+.panel--mapa {
+  padding-bottom: 1rem;
+}
