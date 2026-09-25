@@ -1,32 +1,108 @@
-// =====================================================
-// CONSTRUCCIÓN DEL GRAFO
-// =====================================================
+/* =====================================================
+   grafo.js
+   Construcción y consulta del grafo
+   ===================================================== */
 
-// Crea una lista de adyacencia a partir de las vías
-function construirGrafo(vias) {
-  const grafo = {};
+var Grafo = (function () {
+  "use strict";
 
-  // Crear una lista vacía para cada lugar
-  Object.keys(lugares).forEach((lugar) => {
-    grafo[lugar] = [];
-  });
+  // Construye la lista de adyacencia a partir de los datos
+  function construir(datos) {
+    var grafo = {
+      nodos: datos.nodos,
+      vecinos: {}
+    };
 
-  // Como el grafo es no dirigido,
-  // cada conexión se agrega en los dos sentidos.
-  vias.forEach(([origen, destino, peso]) => {
-    grafo[origen].push({
-      destino: destino,
-      peso: peso
+    // Crear lista vacía de vecinos para cada nodo
+    listaNodos(grafo).forEach(function (id) {
+      grafo.vecinos[id] = [];
     });
 
-    grafo[destino].push({
-      destino: origen,
-      peso: peso
+    // El grafo es NO dirigido:
+    // cada vía se agrega en los dos sentidos.
+    datos.aristas.forEach(function (arista) {
+      var origen = arista[0];
+      var destino = arista[1];
+      var peso = arista[2];
+
+      grafo.vecinos[origen].push({
+        vecino: destino,
+        peso: peso
+      });
+
+      grafo.vecinos[destino].push({
+        vecino: origen,
+        peso: peso
+      });
     });
-  });
 
-  return grafo;
-}
+    return grafo;
+  }
 
-// Construimos el grafo utilizando los datos de datos.js
-const grafo = construirGrafo(vias);
+  // Devuelve la lista de identificadores de los nodos
+  function listaNodos(grafo) {
+    return Object.keys(grafo.nodos);
+  }
+
+  // Devuelve estadísticas básicas del grafo
+  function estadisticas(grafo) {
+    var V = listaNodos(grafo).length;
+    var totalGrados = 0;
+
+    listaNodos(grafo).forEach(function (id) {
+      totalGrados += grafo.vecinos[id].length;
+    });
+
+    // Cada arista aparece dos veces porque el grafo es no dirigido
+    var E = totalGrados / 2;
+
+    return {
+      V: V,
+      E: E,
+      gradoPromedio: V === 0 ? 0 : totalGrados / V,
+      conexo: esConexo(grafo)
+    };
+  }
+
+  // Comprueba si todos los nodos están conectados
+  function esConexo(grafo) {
+    var nodos = listaNodos(grafo);
+
+    if (nodos.length === 0) {
+      return true;
+    }
+
+    var visitados = {};
+    var cola = [nodos[0]];
+
+    visitados[nodos[0]] = true;
+
+    while (cola.length > 0) {
+      var actual = cola.shift();
+
+      grafo.vecinos[actual].forEach(function (conexion) {
+        var vecino = conexion.vecino;
+
+        if (!visitados[vecino]) {
+          visitados[vecino] = true;
+          cola.push(vecino);
+        }
+      });
+    }
+
+    return Object.keys(visitados).length === nodos.length;
+  }
+
+  // Construir el grafo base usando los datos de Datos
+  function grafoBase() {
+    return construir(Datos.grafoBase());
+  }
+
+  return {
+    construir: construir,
+    listaNodos: listaNodos,
+    estadisticas: estadisticas,
+    esConexo: esConexo,
+    grafoBase: grafoBase
+  };
+})();
