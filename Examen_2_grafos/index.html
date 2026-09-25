@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rutas entre sedes · Algoritmo de Dijkstra</title>
+    <meta
+      name="description"
+      content="Buscador de la ruta más rápida entre sedes del ITM usando el algoritmo de Dijkstra sobre un grafo ponderado."
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/estilos.css" />
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"
+      defer
+    ></script>
+    <script src="js/grafo.js" defer></script>
+    <script src="js/datos.js" defer></script>
+    <script src="js/cola-prioridad.js" defer></script>
+    <script src="js/dijkstra.js" defer></script>
+    <script src="js/alternativos.js" defer></script>
+    <script src="js/experimento.js" defer></script>
+    <script src="js/graficas.js" defer></script>
+    <script src="js/mapa.js" defer></script>
+    <script src="js/ui.js" defer></script>
+    <script src="js/main.js" defer></script>
+  </head>
+  <body>
+    <header class="encabezado">
+      <div class="envoltorio encabezado-fila">
+        <div>
+          <h1>Rutas entre sedes</h1>
+          <p>
+            La ruta más rápida no siempre es la que tiene menos tramos. Un grafo
+            ponderado y el algoritmo de Dijkstra lo resuelven.
+          </p>
+        </div>
+        <p class="sello">Análisis de Algoritmos · Dijkstra</p>
+      </div>
+    </header>
+
+    <main class="envoltorio">
+      <div class="tablero">
+        <!-- ============ Mapa ============ -->
+        <section class="panel panel--mapa">
+          <div class="panel-cabecera">
+            <h2>Red de vías</h2>
+            <p class="nota" id="resumenGrafo"></p>
+          </div>
+          <svg
+            id="mapa"
+            viewBox="0 0 700 520"
+            role="img"
+            aria-label="Mapa de sedes y vías"
+          ></svg>
+          <ul class="leyenda">
+            <li><span class="marca marca--ruta"></span>Ruta encontrada</li>
+            <li>
+              <span class="marca marca--visitado"></span>Nodo visitado por el
+              algoritmo
+            </li>
+            <li><span class="marca marca--peso"></span>Minutos de cada vía</li>
+          </ul>
+        </section>
+
+        <!-- ============ Controles y resultado ============ -->
+        <section class="panel">
+          <h2>Consulta</h2>
+
+          <div class="campos-par">
+            <div class="campo">
+              <label for="origen">Origen</label>
+              <select id="origen"></select>
+            </div>
+            <div class="campo">
+              <label for="destino">Destino</label>
+              <select id="destino"></select>
+            </div>
+          </div>
+
+          <p class="etiqueta-bloque">Condiciones de la red</p>
+          <div id="escenarios" class="escenarios"></div>
+          <p id="descripcionEscenario" class="descripcion-escenario"></p>
+
+          <button type="button" id="btnCalcular" class="boton boton--optimo">
+            Calcular la ruta
+          </button>
+          <p id="aviso" class="error" role="alert" hidden></p>
+
+          <div id="resultado" class="resultado" hidden>
+            <p class="ruta-total">
+              <span id="totalMinutos">0</span> <span class="unidad">min</span>
+            </p>
+            <p class="ruta-secuencia" id="rutaSecuencia"></p>
+
+            <dl class="indicadores">
+              <div class="indicador">
+                <dt>Tramos</dt>
+                <dd id="tramos">0</dd>
+              </div>
+              <div class="indicador">
+                <dt>Nodos visitados</dt>
+                <dd id="visitados">0</dd>
+              </div>
+              <div class="indicador">
+                <dt>Operaciones del montículo</dt>
+                <dd id="operaciones">0</dd>
+              </div>
+            </dl>
+
+            <div class="comparativa" id="bloqueBfs">
+              <h3>Contra el camino de menos tramos</h3>
+              <p class="nota" id="textoBfs"></p>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ============ Traza y tabla de distancias ============ -->
+      <div class="tablero tablero--secundario">
+        <section class="panel">
+          <h2>Qué hizo el algoritmo, paso a paso</h2>
+          <p class="nota">
+            Cada línea es una decisión real del código, no un texto escrito
+            aparte.
+          </p>
+          <ol id="pasos" class="pasos"></ol>
+        </section>
+
+        <section class="panel">
+          <h2>Distancias finales desde el origen</h2>
+          <p class="nota">
+            Dijkstra no solo resuelve el destino pedido: calcula la distancia
+            mínima a todos los nodos que alcanza.
+          </p>
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Sede</th>
+                <th class="num">Minutos</th>
+                <th>Se llega desde</th>
+              </tr>
+            </thead>
+            <tbody id="tablaDistancias"></tbody>
+          </table>
+        </section>
+      </div>
+
+      <!-- ============ Experimento de complejidad ============ -->
+      <section class="panel panel--ancho">
+        <div class="panel-cabecera panel-cabecera--fila">
+          <div>
+            <h2>O(V²) contra O((V + E) log V)</h2>
+            <p class="nota">
+              Es el mismo algoritmo dos veces; cambia solo cómo se busca el
+              siguiente nodo. Se generan redes aleatorias conexas de tamaño
+              creciente y se mide el tiempo de cada versión. Las dos deben
+              devolver la misma distancia: si no coinciden, el experimento lo
+              reporta.
+            </p>
+          </div>
+          <button
+            type="button"
+            id="btnExperimento"
+            class="boton boton--tinta boton--compacto"
+          >
+            Ejecutar la medición
+          </button>
+        </div>
+        <div class="lienzo">
+          <canvas id="canvasExperimento"></canvas>
+        </div>
+        <p id="notaExperimento" class="nota nota--medicion"></p>
+      </section>
+
+      <!-- ============ Límite del algoritmo ============ -->
+      <section class="panel panel--ancho">
+        <div class="panel-cabecera panel-cabecera--fila">
+          <div>
+            <h2>Dónde Dijkstra se equivoca</h2>
+            <p class="nota">
+              Dijkstra da por definitiva la distancia de un nodo al visitarlo.
+              Esa apuesta solo vale si ningún peso es negativo. En este grafo
+              dirigido de cuatro nodos hay una arista de −2 y el algoritmo
+              devuelve una respuesta incorrecta; Bellman-Ford, que relaja todas
+              las aristas V−1 veces, la corrige.
+            </p>
+          </div>
+          <button
+            type="button"
+            id="btnNegativos"
+            class="boton boton--tinta boton--compacto"
+          >
+            Comparar los dos
+          </button>
+        </div>
+        <div id="salidaNegativos" class="salida-negativos" hidden>
+          <table class="tabla tabla--compacta">
+            <thead>
+              <tr>
+                <th>Nodo</th>
+                <th class="num">Dijkstra</th>
+                <th class="num">Bellman-Ford</th>
+                <th>¿Coincide?</th>
+              </tr>
+            </thead>
+            <tbody id="tablaNegativos"></tbody>
+          </table>
+          <p class="nota" id="notaNegativos"></p>
+        </div>
+      </section>
+
+      <section class="fundamento">
+        <h2>Por qué Dijkstra encuentra el mínimo</h2>
+        <p>
+          El algoritmo mantiene una distancia provisional a cada nodo y en cada
+          vuelta cierra la del nodo no visitado con la menor de todas. Que esa
+          distancia sea definitiva se apoya en un solo hecho: como ningún peso
+          es negativo, cualquier camino alternativo tendría que pasar por un
+          nodo todavía abierto, cuya distancia ya es mayor o igual, y sumarle
+          aristas no negativas. Ese camino no puede resultar más corto.
+        </p>
+        <p>
+          De ahí sale también el límite: con una arista negativa el razonamiento
+          se cae, porque un camino más largo podría abaratarse después. Por eso
+          la sección anterior existe.
+        </p>
+        <p class="nota">
+          Los tiempos de las vías son estimados para el ejercicio. El modelo
+          supone que el costo de una vía no depende de la hora ni de quién la
+          recorra; con tráfico real habría que recalcular los pesos de forma
+          continua, que es justamente lo que hacen las aplicaciones de
+          navegación.
+        </p>
+      </section>
+    </main>
+
+    <footer class="pie">
+      <p class="envoltorio">Examen 2 · Análisis de Algoritmos · ITM</p>
+    </footer>
+  </body>
+</html>
