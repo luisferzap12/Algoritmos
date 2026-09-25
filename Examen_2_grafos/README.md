@@ -5,9 +5,9 @@ Buscador de la ruta más rápida entre sedes del ITM y puntos de referencia de M
 Examen 2 · Análisis de Algoritmos · Institución Universitaria Pascual Bravo
 Fecha de entrega: domingo 27 de septiembre de 2026
 
-**Repositorio:** https://github.com/luisferzap12/Algoritmos — carpeta `Examen_2_grafos/`
-**Video de sustentación:** _(pegar aquí la URL antes de la entrega)_
-**Demo en línea:** https://luisferzap12.github.io/Algoritmos/Examen_2_grafos/ _(activar en Settings → Pages)_
+Repositorio: https://github.com/luisferzap12/Algoritmos — carpeta `Examen_2_grafos/`
+Video de sustentación:
+Página en linea : https://luisferzap12.github.io/Algoritmos/Examen_2_grafos/index.html
 
 ---
 
