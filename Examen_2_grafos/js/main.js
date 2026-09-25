@@ -10,7 +10,12 @@
   document.addEventListener("DOMContentLoaded", function () {
     UI.init();
     var el = UI.referencias();
-    var grafoActual = Datos.grafoBase();
+
+    // FIX: Datos.grafoBase() solo trae {nodos, aristas}. Grafo.construir()
+    // agrega la lista de adyacencia (vecinos) que necesitan Grafo.estadisticas,
+    // Dijkstra, etc. Sin esto, cualquier función que lea grafo.vecinos[id]
+    // truena con "Cannot read properties of undefined".
+    var grafoActual = Grafo.construir(Datos.grafoBase());
 
     // Robledo → Industriales por defecto: es el par donde se ve que el
     // camino de menos tramos no es el más rápido.
@@ -52,7 +57,8 @@
       }
       UI.limpiarAviso();
 
-      grafoActual = Datos.conEscenario(consulta.escenario);
+      // FIX: mismo caso — conEscenario() también entrega el grafo "crudo".
+      grafoActual = Grafo.construir(Datos.conEscenario(consulta.escenario));
 
       var resultado = Dijkstra.conHeap(
         grafoActual,
