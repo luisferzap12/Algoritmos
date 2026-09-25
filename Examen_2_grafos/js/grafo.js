@@ -10,6 +10,7 @@ var Grafo = (function () {
   function construir(datos) {
     var grafo = {
       nodos: datos.nodos,
+      aristas: datos.aristas,
       vecinos: {}
     };
 
@@ -42,6 +43,11 @@ var Grafo = (function () {
   // Devuelve la lista de identificadores de los nodos
   function listaNodos(grafo) {
     return Object.keys(grafo.nodos);
+  }
+
+  // Devuelve los vecinos de un nodo
+  function vecinos(grafo, id) {
+    return grafo.vecinos[id] || [];
   }
 
   // Devuelve estadísticas básicas del grafo
@@ -101,6 +107,7 @@ var Grafo = (function () {
   return {
     construir: construir,
     listaNodos: listaNodos,
+    vecinos: vecinos,
     estadisticas: estadisticas,
     esConexo: esConexo,
     grafoBase: grafoBase
