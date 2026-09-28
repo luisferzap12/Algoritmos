@@ -1,127 +1,82 @@
-/* =====================================================
-   graficas.js
-   Gráfica de comparación de tiempos
-   ===================================================== */
+/* =====================================================================
+   graficas.js  —  Integrante 2
+   Gráfica del experimento de complejidad con Chart.js.
+   ===================================================================== */
 
 var Graficas = (function () {
-  "use strict";
+  'use strict';
 
-  function complejidad(canvas, mediciones) {
-    if (!canvas || !mediciones) {
-      return;
+  var instancia = null;
+
+  /* Chart.js llega por CDN. Sin conexión, el resto del tablero debe
+     seguir funcionando en lugar de romperse. */
+  function hayChart(canvas) {
+    if (typeof Chart !== 'undefined') return true;
+
+    var aviso = canvas.parentNode.querySelector('.sin-grafico');
+    if (!aviso) {
+      aviso = document.createElement('p');
+      aviso.className = 'sin-grafico';
+      aviso.textContent = 'No se pudo cargar Chart.js. Revisa la conexión: los números del experimento siguen apareciendo abajo.';
+      canvas.parentNode.appendChild(aviso);
     }
-
-    var ctx = canvas.getContext("2d");
-
-    var ancho = canvas.width;
-    var alto = canvas.height;
-
-    ctx.clearRect(0, 0, ancho, alto);
-
-    if (mediciones.length === 0) {
-      return;
-    }
-
-    var margen = 45;
-    var anchoGrafica = ancho - margen * 2;
-    var altoGrafica = alto - margen * 2;
-
-    var maxX = 0;
-    var maxY = 0;
-
-    mediciones.forEach(function (m) {
-      if (m.V > maxX) {
-        maxX = m.V;
-      }
-
-      if (m.msHeap > maxY) {
-        maxY = m.msHeap;
-      }
-
-      if (m.msSimple > maxY) {
-        maxY = m.msSimple;
-      }
-    });
-
-    if (maxY === 0) {
-      maxY = 1;
-    }
-
-    // Ejes
-    ctx.beginPath();
-    ctx.moveTo(margen, margen);
-    ctx.lineTo(margen, alto - margen);
-    ctx.lineTo(ancho - margen, alto - margen);
-    ctx.stroke();
-
-    // Línea de la versión con montículo
-    ctx.beginPath();
-
-    mediciones.forEach(function (m, i) {
-      var x =
-        margen +
-        (m.V / maxX) * anchoGrafica;
-
-      var y =
-        alto -
-        margen -
-        (m.msHeap / maxY) * altoGrafica;
-
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    });
-
-    ctx.stroke();
-
-    // Línea de la versión O(V²)
-    ctx.beginPath();
-
-    mediciones.forEach(function (m, i) {
-      var x =
-        margen +
-        (m.V / maxX) * anchoGrafica;
-
-      var y =
-        alto -
-        margen -
-        (m.msSimple / maxY) * altoGrafica;
-
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    });
-
-    ctx.stroke();
-
-    // Título de los ejes
-    ctx.font = "12px Arial";
-
-    ctx.fillText(
-      "Número de nodos (V)",
-      ancho / 2 - 50,
-      alto - 10
-    );
-
-    ctx.save();
-
-    ctx.translate(15, alto / 2);
-    ctx.rotate(-Math.PI / 2);
-
-    ctx.fillText(
-      "Tiempo (ms)",
-      0,
-      0
-    );
-
-    ctx.restore();
+    return false;
   }
 
-  return {
-    complejidad: complejidad
-  };
+  function complejidad(canvas, mediciones) {
+    if (!hayChart(canvas)) return;
+    if (instancia) instancia.destroy();
+
+    instancia = new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: mediciones.map(function (m) { return m.V.toLocaleString('es-CO'); }),
+        datasets: [
+          {
+            label: 'Con montículo — O((V + E) log V)',
+            data: mediciones.map(function (m) { return m.msHeap; }),
+            borderColor: '#1E7A6A',
+            backgroundColor: '#1E7A6A',
+            tension: 0.25,
+            pointRadius: 3
+          },
+          {
+            label: 'Búsqueda lineal del mínimo — O(V²)',
+            data: mediciones.map(function (m) { return m.msSimple; }),
+            borderColor: '#C0463B',
+            backgroundColor: '#C0463B',
+            tension: 0.25,
+            pointRadius: 3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom' },
+          tooltip: {
+            callbacks: {
+              label: function (ctx) {
+                return ctx.dataset.label + ': ' + ctx.parsed.y.toFixed(1) + ' ms';
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Milisegundos' },
+            grid: { color: '#E7E3DA' }
+          },
+          x: {
+            title: { display: true, text: 'Nodos del grafo (V)' },
+            grid: { display: false }
+          }
+        }
+      }
+    });
+  }
+
+  return { complejidad: complejidad };
 })();
