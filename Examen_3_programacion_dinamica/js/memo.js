@@ -25,6 +25,9 @@
 var Memo = (function () {
   'use strict';
 
+  // Centinela para desenrollar la recursión cuando se pasa del límite.
+  var ABORTO = {};
+
   function crearMatriz(filas, columnas, valor) {
     var m = new Array(filas);
     for (var i = 0; i < filas; i++) {
@@ -105,8 +108,51 @@ var Memo = (function () {
     };
   }
 
+  /* La misma recurrencia, pero SIN tabla y SIN memo: el árbol de llamadas
+     se expande sin control (~2^n nodos) porque cada subproblema se vuelve
+     a calcular cada vez que se lo pide. Es el contraste que pide el
+     examen: medir, en el mismo problema, cuánto cuesta no recordar. Se
+     puede cortar con `limiteLlamadas` para no congelar el navegador. */
+  function mochilaSinMemoria(grupos, capacidad, opciones) {
+    var limite = (opciones && opciones.limiteLlamadas) || 5000000;
+    var n = grupos.length;
+    var llamadas = 0;
+    var abortado = false;
+
+    function opt(i, c) {
+      llamadas += 1;
+      if (llamadas > limite) {
+        abortado = true;
+        throw ABORTO;
+      }
+
+      if (i === 0 || c === 0) return 0;
+
+      var peso = grupos[i - 1].tamano;
+      var sinGrupo = opt(i - 1, c);
+      var conGrupo = peso <= c ? peso + opt(i - 1, c - peso) : -1;
+      return conGrupo > sinGrupo ? conGrupo : sinGrupo;
+    }
+
+    var valor = null;
+    try {
+      valor = opt(n, capacidad);
+    } catch (e) {
+      if (e !== ABORTO) throw e; // cualquier otro error sí se propaga
+    }
+
+    return {
+      valor: valor,
+      llamadas: llamadas,
+      abortado: abortado,
+      capacidad: capacidad,
+      n: n
+    };
+  }
+
   return {
-    mochilaMemo: mochilaMemo
+    mochilaMemo: mochilaMemo,
+    mochilaSinMemoria: mochilaSinMemoria
   };
 })();
 
