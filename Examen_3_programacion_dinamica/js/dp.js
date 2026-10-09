@@ -132,8 +132,41 @@ var DP = (function () {
     };
   }
 
+  /* Variante de una sola fila. dp[c] guarda el óptimo que la fila en curso
+     va construyendo; no se conservan las filas anteriores. El detalle que
+     hace que funcione es recorrer la capacidad HACIA ATRÁS (de C a peso):
+     así dp[c - peso] todavía es el valor de la fila anterior y cada grupo
+     se usa a lo más una vez. Hacia adelante se reusaría el mismo grupo y
+     el problema se volvería la mochila no acotada. Espacio O(C). */
+  function mochilaUnaFila(grupos, capacidad, opciones) {
+    var conHistorial = !!(opciones && opciones.conHistorial);
+    var n = grupos.length;
+    var dp = new Array(capacidad + 1);
+    var historial = conHistorial ? [] : null;
+
+    for (var c = 0; c <= capacidad; c++) dp[c] = 0; // base: dp[0] = 0 y columna 0
+
+    for (var i = 1; i <= n; i++) {
+      var peso = pesoDe(grupos[i - 1]);
+      for (var c2 = capacidad; c2 >= peso; c2--) {
+        var conGrupo = peso + dp[c2 - peso]; // dp[c2-peso] es de la fila anterior
+        if (conGrupo > dp[c2]) dp[c2] = conGrupo;
+      }
+      if (conHistorial) historial.push(dp.slice());
+    }
+
+    return {
+      valor: dp[capacidad],
+      dp: dp,
+      historial: historial,
+      capacidad: capacidad,
+      n: n
+    };
+  }
+
   return {
     mochilaMatriz: mochilaMatriz,
+    mochilaUnaFila: mochilaUnaFila,
     reconstruir: reconstruir,
     capacidadDe: pesoDe
   };
