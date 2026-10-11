@@ -7,7 +7,7 @@ Fecha de entrega: sábado 10 de octubre de 2026
 
 Repositorio: https://github.com/luisferzap12/Algoritmos/Examen_3_programacion_dinamica
 
-Video de sustentación:
+Video de sustentación:https://canva.link/2uf5id3m2cq1wcg
 Demo en línea: https://luisferzap12.github.io/Algoritmos/Examen_3_programacion_dinamica/index.html
 
 
