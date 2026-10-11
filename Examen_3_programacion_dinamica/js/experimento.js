@@ -42,7 +42,7 @@ var Experimento = (function () {
     tamanos.forEach(function (n) {
       var grupos = gruposAleatorios(n, capacidad);
 
-      var porDP = DP.tabular(grupos, capacidad);
+      var porDP = Alternativos.tabularDP(grupos, capacidad);
       var porBruta = Alternativos.fuerzaBruta(grupos, capacidad);
 
       if (!porBruta.excedido && porBruta.ocupacion !== porDP.ocupacion) discrepancias++;
@@ -78,7 +78,7 @@ var Experimento = (function () {
 
     capacidades.forEach(function (C) {
       var grupos = gruposAleatorios(n, C);
-      var porDP = DP.unaSolaFila(grupos, C);
+      var porDP = Alternativos.unaFilaDP(grupos, C);
 
       mediciones.push({
         capacidad: C,
@@ -97,9 +97,30 @@ var Experimento = (function () {
      cuántos estados tocó cada uno.
      ------------------------------------------------------------------- */
   function compararEnfoques(grupos, capacidad) {
-    var porTabla = DP.tabular(grupos, capacidad);
-    var porMemo = Memo.resolver(grupos, capacidad);
-    var sinNada = Memo.sinMemoria(grupos, capacidad);
+    var porTabla = Alternativos.tabularDP(grupos, capacidad);
+
+    // memo.js expone mochilaMemo() y mochilaSinMemoria(); aquí se
+    // traducen al formato que usa la pantalla.
+    var m = Memo.mochilaMemo(grupos, capacidad);
+    var s = Memo.mochilaSinMemoria(grupos, capacidad);
+
+    var porMemo = {
+      ocupacion: m.valor,
+      calculadas: m.estadosCalculados,
+      llamadas: m.llamadas,
+      totalPosibles: porTabla.celdas,
+      ahorro: porTabla.celdas > 0
+        ? (1 - m.estadosCalculados / porTabla.celdas) * 100
+        : 0,
+      metodo: 'memoización'
+    };
+
+    var sinNada = {
+      ocupacion: s.valor,
+      llamadas: s.llamadas,
+      excedido: !!s.abortado,
+      metodo: 'recursión sin memoria'
+    };
 
     return {
       tabulacion: porTabla,
