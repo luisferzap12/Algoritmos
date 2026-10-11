@@ -14,6 +14,79 @@ var Alternativos = (function () {
 
   var TOPE_FUERZA_BRUTA = 22;   // 2^22 ≈ 4,2 millones de combinaciones
 
+
+  /* -------------------------------------------------------------------
+     ADAPTADOR AL MÓDULO DP
+     dp.js expone mochilaMatriz() y mochilaUnaFila(). Esta capa traduce
+     esa respuesta al formato que esperan la pantalla y los experimentos
+     (ocupacion, seleccionados, celdas, ms, traza), y reconstruye la traza
+     legible a partir del camino. Así los dos módulos pueden evolucionar
+     por separado sin romperse mutuamente.
+     ------------------------------------------------------------------- */
+  function tabularDP(grupos, capacidad) {
+    var inicio = ahora();
+    var r = DP.mochilaMatriz(grupos, capacidad);
+    var ms = ahora() - inicio;
+    var n = grupos.length;
+
+    return {
+      tabla: r.tabla,
+      camino: r.camino,
+      ocupacion: r.valor,
+      seleccionados: r.seleccion,
+      traza: trazaLegible(r.tabla, grupos, capacidad),
+      celdas: (n + 1) * (capacidad + 1),
+      ms: ms,
+      metodo: 'tabulación'
+    };
+  }
+
+  function unaFilaDP(grupos, capacidad) {
+    var inicio = ahora();
+    var r = DP.mochilaUnaFila(grupos, capacidad);
+
+    return {
+      ocupacion: r.valor,
+      celdas: capacidad + 1,
+      ms: ahora() - inicio,
+      metodo: 'una sola fila'
+    };
+  }
+
+  /* Recorre la tabla hacia atrás y explica en palabras cada decisión. */
+  function trazaLegible(tabla, grupos, capacidad) {
+    var traza = [];
+    var c = capacidad;
+
+    for (var i = grupos.length; i > 0; i--) {
+      var g = grupos[i - 1];
+
+      if (tabla[i][c] === tabla[i - 1][c]) {
+        traza.push({
+          tipo: 'descarta',
+          texto: g.nombre + ' (' + g.tamano + '): dp[' + i + '][' + c + '] = dp[' + (i - 1) +
+                 '][' + c + '] = ' + tabla[i][c] + '. Asignarlo no mejoraba, así que no entra.'
+        });
+      } else {
+        traza.push({
+          tipo: 'asigna',
+          texto: g.nombre + ' (' + g.tamano + '): dp[' + i + '][' + c + '] = ' + tabla[i][c] +
+                 ' supera a dp[' + (i - 1) + '][' + c + '] = ' + tabla[i - 1][c] +
+                 '. Entra, y quedan ' + (c - g.tamano) + ' puestos para los grupos anteriores.'
+        });
+        c -= g.tamano;
+      }
+    }
+
+    traza.push({
+      tipo: 'base',
+      texto: 'Llegamos a la fila 0 con ' + c + ' puestos sin repartir. Ahí vale el caso base: ' +
+             'sin grupos no se ocupa nada, y el recorrido termina.'
+    });
+
+    return traza;
+  }
+
   /* -------------------------------------------------------------------
      FUERZA BRUTA — Θ(2^n · n)
      Recorre todos los subconjuntos posibles. Cada número de 0 a 2^n - 1
@@ -121,7 +194,7 @@ var Alternativos = (function () {
      DP fuera más rápida pero diera otro número, no probaría nada.
      ------------------------------------------------------------------- */
   function compararTodas(grupos, capacidad) {
-    var porDP = DP.tabular(grupos, capacidad);
+    var porDP = tabularDP(grupos, capacidad);
     var porBruta = fuerzaBruta(grupos, capacidad);
     var porMayor = greedy(grupos, capacidad, 'mayor');
     var porMenor = greedy(grupos, capacidad, 'menor');
@@ -144,6 +217,8 @@ var Alternativos = (function () {
 
   return {
     TOPE_FUERZA_BRUTA: TOPE_FUERZA_BRUTA,
+    tabularDP: tabularDP,
+    unaFilaDP: unaFilaDP,
     fuerzaBruta: fuerzaBruta,
     greedy: greedy,
     compararTodas: compararTodas
