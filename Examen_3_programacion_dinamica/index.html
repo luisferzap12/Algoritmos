@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ocupación de aulas · Programación dinámica</title>
+  <meta name="description" content="Asignación de grupos a un aula maximizando la ocupación, resuelta con programación dinámica (mochila 0/1).">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/estilos.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+  <script src="js/datos.js" defer></script>
+  <script src="js/modelo.js" defer></script>
+  <script src="js/dp.js" defer></script>
+  <script src="js/memo.js" defer></script>
+  <script src="js/alternativos.js" defer></script>
+  <script src="js/experimento.js" defer></script>
+  <script src="js/tabla.js" defer></script>
+  <script src="js/graficas.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/main.js" defer></script>
+</head>
+<body>
+
+<header class="encabezado">
+  <div class="envoltorio encabezado-fila">
+    <div>
+      <h1>Ocupación de aulas</h1>
+      <p>Qué combinación de grupos aprovecha mejor un salón, sin pasarse de su capacidad. Mochila 0/1 resuelta con programación dinámica.</p>
+    </div>
+    <p class="sello">Análisis de Algoritmos · Programación dinámica</p>
+  </div>
+</header>
+
+<main class="envoltorio">
+
+  <div class="tablero">
+
+    <!-- ============ Entrada ============ -->
+    <section class="panel">
+      <h2>El aula y las solicitudes</h2>
+
+      <p class="etiqueta-bloque">Escenarios</p>
+      <div id="escenarios" class="escenarios"></div>
+      <p id="descripcionEscenario" class="descripcion-escenario"></p>
+
+      <div class="campo">
+        <label for="capacidad">Capacidad del aula (puestos)</label>
+        <input type="number" id="capacidad" min="1" max="500" step="1">
+      </div>
+
+      <div class="cola-cabecera">
+        <h3>Grupos que solicitaron el bloque: <span id="conteo">0</span></h3>
+      </div>
+      <ul id="lista" class="grupos"></ul>
+
+      <details class="agregar">
+        <summary>Agregar un grupo</summary>
+        <div class="campo">
+          <label for="nombre">Nombre del grupo o asignatura</label>
+          <input type="text" id="nombre" maxlength="40" autocomplete="off" placeholder="Estructuras de Datos">
+        </div>
+        <div class="campo">
+          <label for="tamano">Número de estudiantes</label>
+          <input type="number" id="tamano" min="1" max="500" step="1" placeholder="18">
+        </div>
+        <button type="button" id="btnAgregar" class="boton boton--tinta">Agregar a la lista</button>
+      </details>
+
+      <p id="aviso" class="error" role="alert" hidden></p>
+      <button type="button" id="btnResolver" class="boton boton--optimo">Resolver con programación dinámica</button>
+    </section>
+
+    <!-- ============ Resultado ============ -->
+    <section class="panel">
+      <h2>Asignación óptima</h2>
+
+      <div id="resultado" hidden>
+        <p class="ocupacion-total"><span id="ocupados">0</span><span class="de">de <span id="capacidadTotal">0</span> puestos</span></p>
+        <div class="barra"><div id="barraOcupada" class="barra-llena"></div></div>
+        <p id="resumenOcupacion" class="nota"></p>
+
+        <h3 class="subtitulo">Grupos asignados</h3>
+        <ul id="asignados" class="asignados"></ul>
+
+        <dl class="indicadores">
+          <div class="indicador">
+            <dt>Puestos libres</dt>
+            <dd id="libres">0</dd>
+          </div>
+          <div class="indicador">
+            <dt>Estudiantes sin aula</dt>
+            <dd id="sinAula">0</dd>
+          </div>
+          <div class="indicador">
+            <dt>Estados calculados</dt>
+            <dd id="celdas">0</dd>
+          </div>
+        </dl>
+
+        <div class="comparativa" id="bloqueGreedy">
+          <h3>Contra las estrategias voraces</h3>
+          <p class="nota" id="textoGreedy"></p>
+        </div>
+
+        <div class="comparativa comparativa--neutra" id="bloqueBruta">
+          <h3>Contra la fuerza bruta</h3>
+          <p class="nota" id="textoBruta"></p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ La tabla DP ============ -->
+  <section class="panel panel--ancho">
+    <div class="panel-cabecera">
+      <h2>La tabla dp[i][c]</h2>
+      <p class="nota">Cada fila agrega un grupo a los disponibles; cada columna es una capacidad hipotética del aula. La fila 0 y la columna 0 son los casos base. Las celdas resaltadas son el camino que recorre la reconstrucción desde la esquina inferior derecha, que contiene la respuesta.</p>
+    </div>
+    <div id="contenedorTabla" class="contenedor-tabla"></div>
+    <ul class="leyenda">
+      <li><span class="marca marca--base"></span>Casos base</li>
+      <li><span class="marca marca--camino"></span>Camino de reconstrucción</li>
+      <li><span class="marca marca--respuesta"></span>dp[n][C]: la respuesta</li>
+    </ul>
+  </section>
+
+  <!-- ============ Reconstrucción ============ -->
+  <div class="tablero tablero--secundario">
+    <section class="panel">
+      <h2>Cómo se reconstruye la respuesta</h2>
+      <p class="nota">La tabla dice cuántos puestos se ocupan, no quiénes entran. Para saberlo se camina hacia atrás desde dp[n][C] comparando cada celda con la de arriba.</p>
+      <ol id="traza" class="pasos"></ol>
+    </section>
+
+    <section class="panel">
+      <h2>Tabulación contra memoización</h2>
+      <p class="nota">La misma recurrencia resuelta de abajo hacia arriba y de arriba hacia abajo. Dan el mismo resultado; lo que cambia es cuántos estados se tocan.</p>
+      <table class="tabla">
+        <thead>
+          <tr><th>Enfoque</th><th class="num">Estados</th><th class="num">Resultado</th></tr>
+        </thead>
+        <tbody id="tablaEnfoques"></tbody>
+      </table>
+      <p id="notaEnfoques" class="nota"></p>
+    </section>
+  </div>
+
+  <!-- ============ Experimento 1 ============ -->
+  <section class="panel panel--ancho">
+    <div class="panel-cabecera panel-cabecera--fila">
+      <div>
+        <h2>Crecer el número de grupos</h2>
+        <p class="nota">Capacidad fija y n creciente. La programación dinámica crece de forma lineal con n; la fuerza bruta duplica su trabajo con cada grupo nuevo. El eje vertical es logarítmico porque si no, la curva verde quedaría pegada al eje.</p>
+      </div>
+      <button type="button" id="btnExpGrupos" class="boton boton--tinta boton--compacto">Ejecutar la medición</button>
+    </div>
+    <div class="lienzo"><canvas id="canvasGrupos"></canvas></div>
+    <p id="notaGrupos" class="nota nota--medicion"></p>
+  </section>
+
+  <!-- ============ Experimento 2 ============ -->
+  <section class="panel panel--ancho">
+    <div class="panel-cabecera panel-cabecera--fila">
+      <div>
+        <h2>Por qué Θ(n·C) no es polinomial</h2>
+        <p class="nota">Aquí el número de grupos queda fijo y lo que crece es la capacidad. Cada vez que la capacidad se duplica, el tiempo se duplica, pero el dato de entrada solo crece un bit. El tiempo es lineal en el valor de C y exponencial en la cantidad de dígitos que ocupa escribirlo: eso es ser pseudo-polinomial.</p>
+      </div>
+      <button type="button" id="btnExpCapacidad" class="boton boton--tinta boton--compacto">Ejecutar la medición</button>
+    </div>
+    <div class="lienzo"><canvas id="canvasCapacidad"></canvas></div>
+    <p id="notaCapacidad" class="nota nota--medicion"></p>
+  </section>
+
+  <section class="fundamento">
+    <h2>El problema, en los términos del examen</h2>
+    <p>
+      <strong>Estado.</strong> dp[i][c] es la mayor cantidad de puestos que se pueden ocupar usando solo los
+      primeros i grupos de la lista, en un aula con c puestos disponibles.
+    </p>
+    <p>
+      <strong>Recurrencia.</strong> dp[i][c] = max( dp[i−1][c], tam<sub>i</sub> + dp[i−1][c − tam<sub>i</sub>] ),
+      donde la segunda rama solo existe si tam<sub>i</sub> ≤ c. Son las dos únicas decisiones posibles sobre el
+      grupo i: entra o no entra. Si entra, el resto del aula se reparte entre los grupos anteriores, y ese
+      subproblema ya está resuelto en la fila de arriba.
+    </p>
+    <p>
+      <strong>Casos base.</strong> dp[0][c] = 0 para toda capacidad, porque sin grupos no se ocupa nada;
+      y dp[i][0] = 0 para todo i, porque sin puestos no entra nadie.
+    </p>
+    <p>
+      <strong>Por qué no sirve greedy.</strong> No existe una elección local segura. Meter siempre el grupo más
+      grande puede bloquear el aula, y meter siempre el más pequeño la fragmenta. El escenario «el caso donde
+      greedy falla» muestra los dos errores sobre los mismos datos.
+    </p>
+    <p class="nota">
+      Datos sintéticos construidos para el ejercicio; no provienen de la programación académica real de ninguna
+      universidad. El modelo resuelve un aula y un bloque horario a la vez: asignar todas las aulas
+      simultáneamente con prioridades es un problema NP-difícil y la programación dinámica tampoco lo resolvería
+      en tiempo razonable.
+    </p>
+  </section>
+</main>
+
+<footer class="pie">
+  <p class="envoltorio">Examen 3 · Análisis de Algoritmos · Institución Universitaria Pascual Bravo</p>
+</footer>
+
+</body>
+</html>
