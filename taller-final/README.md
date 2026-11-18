@@ -25,8 +25,8 @@ programación dinámica, greedy y backtracking.
 | --- | --- | --- | --- | --- | --- |
 | 1 | Heap | [215. Kth Largest Element in an Array](https://leetcode.com/problems/kth-largest-element-in-an-array/) | luisferzap12| [`kth-largest/`](./kth-largest/) | [jpg](./evidencias/kth-largest-accepted.jpg) |
 | 2 | Ordenamiento (clave) | [179. Largest Number](https://leetcode.com/problems/largest-number/) | luisferzap12| [`largest-number/`](./largest-number/) | [jpg](./evidencias/largest-number-accepted.jpg) |
-| 3 | Grafos (Dijkstra) | [743. Network Delay Time](https://leetcode.com/problems/network-delay-time/) | PENDIENTE | [`network-delay-time/`](./network-delay-time/) | [png](./evidencias/network-delay-time-accepted.png) |
-| 4 | Grafos (MST) | [1584. Min Cost to Connect All Points](https://leetcode.com/problems/min-cost-to-connect-all-points/) | PENDIENTE | [`min-cost-to-connect-all-points/`](./min-cost-to-connect-all-points/) | [png](./evidencias/min-cost-to-connect-all-points-accepted.png) |
+| 3 | Grafos (Dijkstra) | [743. Network Delay Time](https://leetcode.com/problems/network-delay-time/) | malle11| [`network-delay-time/`](./network-delay-time/) | [png](./evidencias/network-delay-time-accepted.png) |
+| 4 | Grafos (MST) | [1584. Min Cost to Connect All Points](https://leetcode.com/problems/min-cost-to-connect-all-points/) | malle11 | [`min-cost-to-connect-all-points/`](./min-cost-to-connect-all-points/) | [png](./evidencias/min-cost-to-connect-all-points-accepted.png) |
 | 5 | Programación dinámica | [72. Edit Distance](https://leetcode.com/problems/edit-distance/) | PENDIENTE | [`edit-distance/`](./edit-distance/) | [png](./evidencias/edit-distance-accepted.png) |
 | 6 | Programación dinámica | [300. Longest Increasing Subsequence](https://leetcode.com/problems/longest-increasing-subsequence/) | PENDIENTE | [`longest-increasing-subsequence/`](./longest-increasing-subsequence/) | [png](./evidencias/longest-increasing-subsequence-accepted.png) |
 | 7 | Greedy | [134. Gas Station](https://leetcode.com/problems/gas-station/) | PENDIENTE | [`gas-station/`](./gas-station/) | [png](./evidencias/gas-station-accepted.png) |
