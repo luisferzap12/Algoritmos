@@ -13,6 +13,7 @@ programación dinámica, greedy y backtracking.
 | Integrante | Usuario de git | Ejercicios |
 | --- | --- | --- |
 | Luis Fernando Zapata Castaño  |  luisferzap12 | 215, 179 |
+| Integrante 2: Luz Mallely Zapata | malle11 | 743, 1584 |
 | Luz Mallely Zapata | malle11 | 743, 1584 |
 | PENDIENTE: integrante 3 | PENDIENTE | 72, 300 |
 | PENDIENTE: integrante 4 | PENDIENTE | 134, 79 |
@@ -25,6 +26,7 @@ programación dinámica, greedy y backtracking.
 | --- | --- | --- | --- | --- | --- |
 | 1 | Heap | [215. Kth Largest Element in an Array](https://leetcode.com/problems/kth-largest-element-in-an-array/) | luisferzap12| [`kth-largest/`](./kth-largest/) | [jpg](./evidencias/kth-largest-accepted.jpg) |
 | 2 | Ordenamiento (clave) | [179. Largest Number](https://leetcode.com/problems/largest-number/) | luisferzap12| [`largest-number/`](./largest-number/) | [jpg](./evidencias/largest-number-accepted.jpg) |
+| 3 | Grafos (Dijkstra) | [743. Network Delay Time](https://leetcode.com/problems/network-delay-time/) | malle11 | [`network-delay-time/`](./network-delay-time/) | [png](./evidencias/network-delay-time-accepted.png) |
 | 3 | Grafos (Dijkstra) | [743. Network Delay Time](https://leetcode.com/problems/network-delay-time/) | malle11| [`network-delay-time/`](./network-delay-time/) | [png](./evidencias/network-delay-time-accepted.png) |
 | 4 | Grafos (MST) | [1584. Min Cost to Connect All Points](https://leetcode.com/problems/min-cost-to-connect-all-points/) | malle11 | [`min-cost-to-connect-all-points/`](./min-cost-to-connect-all-points/) | [png](./evidencias/min-cost-to-connect-all-points-accepted.png) |
 | 5 | Programación dinámica | [72. Edit Distance](https://leetcode.com/problems/edit-distance/) | PENDIENTE | [`edit-distance/`](./edit-distance/) | [png](./evidencias/edit-distance-accepted.png) |
@@ -81,9 +83,10 @@ Complejidad (`n = nums.length`, `L` = máximo de dígitos por número):
 
 ## 743. Network Delay Time
 
+Autor: Luz Mallely Zapata (`malle11`)  
 Autor: PENDIENTE: Luz Mallely Zapata (`malle11`)  
 Familia: grafos (Dijkstra)  
-Código: [`network-delay-time/`](./network-delay-time/)
+Código: [`network-delay-time/network-delay-time.js`](./network-delay-time/network-delay-time.js)
 
 **Modelo:** grafo **dirigido y ponderado**. Vértices: los `n` nodos; arco
 `u → v` con peso `w` (tiempo de la señal).
@@ -104,12 +107,13 @@ arcos de salida. La respuesta es la **mayor** de las distancias finitas
 
 ## 1584. Min Cost to Connect All Points
 
+Autor: Luz Mallely Zapata (`malle11`)  
 Autor: PENDIENTE: Luz Mallely Zapata (`malle11`)  
 Familia: grafos (árbol de recubrimiento mínimo)  
-Código: [`min-cost-to-connect-all-points/`](./min-cost-to-connect-all-points/)
+Código: [`min-cost-to-connect-all-points/min-cost-to-connect-all-points.js`](./min-cost-to-connect-all-points/min-cost-to-connect-all-points.js)
 
-**Algoritmo usado:** PENDIENTE: Kruskal o Prim (dejar solo el que se usó y
-ajustar la complejidad de abajo).
+**Algoritmo usado:** Kruskal con Union-Find (compresión de ruta y unión por
+rango).
 
 **Modelo:** grafo completo no dirigido. Vértices: los puntos; arista entre
 cada pareja con peso = distancia de Manhattan `|x₁ − x₂| + |y₁ − y₂|`.
@@ -122,7 +126,6 @@ minimiza la **suma de las aristas del árbol** que conecta a todos.
 
 **Complejidad** (`n = points.length`, hay `Θ(n²)` aristas):
 - Kruskal: tiempo `O(n² log n)` (domina el sort de las aristas), espacio `O(n²)`.
-- Prim con matriz densa (si fue el usado): tiempo `O(n²)`, espacio `O(n)`.
 
 ![Accepted — Min Cost to Connect All Points](evidencias/min-cost-to-connect-all-points-accepted.png)
 
