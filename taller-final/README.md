@@ -13,7 +13,7 @@ programación dinámica, greedy y backtracking.
 | Integrante | Usuario de git | Ejercicios |
 | --- | --- | --- |
 | Luis Fernando Zapata Castaño  |  luisferzap12 | 215, 179 |
-| PENDIENTE: integrante 2 | PENDIENTE | 743, 1584 |
+| Luz Mallely Zapata | malle11 | 743, 1584 |
 | PENDIENTE: integrante 3 | PENDIENTE | 72, 300 |
 | PENDIENTE: integrante 4 | PENDIENTE | 134, 79 |
 
@@ -81,7 +81,7 @@ Complejidad (`n = nums.length`, `L` = máximo de dígitos por número):
 
 ## 743. Network Delay Time
 
-Autor: PENDIENTE: nombre (`usuario-git`)  
+Autor: PENDIENTE: Luz Mallely Zapata (`malle11`)  
 Familia: grafos (Dijkstra)  
 Código: [`network-delay-time/`](./network-delay-time/)
 
@@ -104,7 +104,7 @@ arcos de salida. La respuesta es la **mayor** de las distancias finitas
 
 ## 1584. Min Cost to Connect All Points
 
-Autor: PENDIENTE: nombre (`usuario-git`)  
+Autor: PENDIENTE: Luz Mallely Zapata (`malle11`)  
 Familia: grafos (árbol de recubrimiento mínimo)  
 Código: [`min-cost-to-connect-all-points/`](./min-cost-to-connect-all-points/)
 
