@@ -81,8 +81,7 @@ Complejidad (`n = nums.length`, `L` = máximo de dígitos por número):
 
 ## 743. Network Delay Time
 
-Autor: Luz Mallely Zapata (`malle11`)  
-Autor: PENDIENTE: Luz Mallely Zapata (`malle11`)  
+Autor: Luz Mallely Zapata (`malle11`)    
 Familia: grafos (Dijkstra)  
 Código: [`network-delay-time/network-delay-time.js`](./network-delay-time/network-delay-time.js)
 
@@ -105,8 +104,7 @@ arcos de salida. La respuesta es la **mayor** de las distancias finitas
 
 ## 1584. Min Cost to Connect All Points
 
-Autor: Luz Mallely Zapata (`malle11`)  
-Autor: PENDIENTE: Luz Mallely Zapata (`malle11`)  
+Autor: Luz Mallely Zapata (`malle11`)   
 Familia: grafos (árbol de recubrimiento mínimo)  
 Código: [`min-cost-to-connect-all-points/min-cost-to-connect-all-points.js`](./min-cost-to-connect-all-points/min-cost-to-connect-all-points.js)
 
