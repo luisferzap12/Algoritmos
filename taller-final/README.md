@@ -14,7 +14,6 @@ programación dinámica, greedy y backtracking.
 | --- | --- | --- |
 | Luis Fernando Zapata Castaño  |  luisferzap12 | 215, 179 |
 | Luz Mallely Zapata | malle11 | 743, 1584 |
-| Luz Mallely Zapata | malle11 | 743, 1584 |
 | Jorge Elías Builes | JorgeBuiles | 72, 300 |
 | PENDIENTE: integrante 4 | PENDIENTE | 134, 79 |
 
@@ -26,7 +25,6 @@ programación dinámica, greedy y backtracking.
 | --- | --- | --- | --- | --- | --- |
 | 1 | Heap | [215. Kth Largest Element in an Array](https://leetcode.com/problems/kth-largest-element-in-an-array/) | luisferzap12| [`kth-largest/`](./kth-largest/) | [jpg](./evidencias/kth-largest-accepted.jpg) |
 | 2 | Ordenamiento (clave) | [179. Largest Number](https://leetcode.com/problems/largest-number/) | luisferzap12| [`largest-number/`](./largest-number/) | [jpg](./evidencias/largest-number-accepted.jpg) |
-| 3 | Grafos (Dijkstra) | [743. Network Delay Time](https://leetcode.com/problems/network-delay-time/) | malle11 | [`network-delay-time/`](./network-delay-time/) | [png](./evidencias/network-delay-time-accepted.png) |
 | 3 | Grafos (Dijkstra) | [743. Network Delay Time](https://leetcode.com/problems/network-delay-time/) | malle11| [`network-delay-time/`](./network-delay-time/) | [png](./evidencias/network-delay-time-accepted.png) |
 | 4 | Grafos (MST) | [1584. Min Cost to Connect All Points](https://leetcode.com/problems/min-cost-to-connect-all-points/) | malle11 | [`min-cost-to-connect-all-points/`](./min-cost-to-connect-all-points/) | [png](./evidencias/min-cost-to-connect-all-points-accepted.png) |
 | 5 | Programación dinámica | [72. Edit Distance](https://leetcode.com/problems/edit-distance/) | JorgeBuiles | [`edit-distance/`](./edit-distance/) | [png](./evidencias/edit-distance-accepted.png) |
