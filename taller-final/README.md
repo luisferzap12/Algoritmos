@@ -15,7 +15,7 @@ programación dinámica, greedy y backtracking.
 | Luis Fernando Zapata Castaño  |  luisferzap12 | 215, 179 |
 | Integrante 2: Luz Mallely Zapata | malle11 | 743, 1584 |
 | Luz Mallely Zapata | malle11 | 743, 1584 |
-| PENDIENTE: integrante 3 | PENDIENTE | 72, 300 |
+| Jorge Elías Builes | JorgeBuiles | 72, 300 |
 | PENDIENTE: integrante 4 | PENDIENTE | 134, 79 |
 
 
@@ -29,8 +29,8 @@ programación dinámica, greedy y backtracking.
 | 3 | Grafos (Dijkstra) | [743. Network Delay Time](https://leetcode.com/problems/network-delay-time/) | malle11 | [`network-delay-time/`](./network-delay-time/) | [png](./evidencias/network-delay-time-accepted.png) |
 | 3 | Grafos (Dijkstra) | [743. Network Delay Time](https://leetcode.com/problems/network-delay-time/) | malle11| [`network-delay-time/`](./network-delay-time/) | [png](./evidencias/network-delay-time-accepted.png) |
 | 4 | Grafos (MST) | [1584. Min Cost to Connect All Points](https://leetcode.com/problems/min-cost-to-connect-all-points/) | malle11 | [`min-cost-to-connect-all-points/`](./min-cost-to-connect-all-points/) | [png](./evidencias/min-cost-to-connect-all-points-accepted.png) |
-| 5 | Programación dinámica | [72. Edit Distance](https://leetcode.com/problems/edit-distance/) | PENDIENTE | [`edit-distance/`](./edit-distance/) | [png](./evidencias/edit-distance-accepted.png) |
-| 6 | Programación dinámica | [300. Longest Increasing Subsequence](https://leetcode.com/problems/longest-increasing-subsequence/) | PENDIENTE | [`longest-increasing-subsequence/`](./longest-increasing-subsequence/) | [png](./evidencias/longest-increasing-subsequence-accepted.png) |
+| 5 | Programación dinámica | [72. Edit Distance](https://leetcode.com/problems/edit-distance/) | JorgeBuiles | [`edit-distance/`](./edit-distance/) | [png](./evidencias/edit-distance-accepted.png) |
+| 6 | Programación dinámica | [300. Longest Increasing Subsequence](https://leetcode.com/problems/longest-increasing-subsequence/) | JorgeBuiles | [`longest-increasing-subsequence/`](./longest-increasing-subsequence/) | [png](./evidencias/longest-increasing-subsequence-accepted.png) |
 | 7 | Greedy | [134. Gas Station](https://leetcode.com/problems/gas-station/) | PENDIENTE | [`gas-station/`](./gas-station/) | [png](./evidencias/gas-station-accepted.png) |
 | 8 | Backtracking | [79. Word Search](https://leetcode.com/problems/word-search/) | PENDIENTE | [`word-search/`](./word-search/) | [png](./evidencias/word-search-accepted.png) |
 
@@ -133,7 +133,7 @@ minimiza la **suma de las aristas del árbol** que conecta a todos.
 
 ## 72. Edit Distance
 
-Autor: PENDIENTE: nombre (`usuario-git`)  
+Autor: Jorge Elías Builes (`JorgeBuiles`)  
 Familia: programación dinámica  
 Código: [`edit-distance/`](./edit-distance/)
 
@@ -161,7 +161,7 @@ La respuesta es `dp[n][m]`. Es la tabla de Wagner–Fischer; un greedy de
 
 ## 300. Longest Increasing Subsequence
 
-Autor: PENDIENTE: nombre (`usuario-git`)  
+Autor: Jorge Elías Builes (`JorgeBuiles`)   
 Familia: programación dinámica  
 Código: [`longest-increasing-subsequence/`](./longest-increasing-subsequence/)
 
@@ -178,9 +178,6 @@ sirve: destruye qué índices se pueden usar.
 **Complejidad** (`n = nums.length`):
 - Tiempo: `Θ(n²)`.
 - Espacio: `Θ(n)`.
-
-(Si la solución usada es la de `O(n log n)` con «menor final posible por
-cada longitud», PENDIENTE: explicar aquí qué guarda esa estructura.)
 
 ![Accepted — Longest Increasing Subsequence](evidencias/longest-increasing-subsequence-accepted.png)
 
