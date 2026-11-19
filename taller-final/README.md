@@ -13,7 +13,7 @@ programación dinámica, greedy y backtracking.
 | Integrante | Usuario de git | Ejercicios |
 | --- | --- | --- |
 | Luis Fernando Zapata Castaño  |  luisferzap12 | 215, 179 |
-| Integrante 2: Luz Mallely Zapata | malle11 | 743, 1584 |
+| Luz Mallely Zapata | malle11 | 743, 1584 |
 | Luz Mallely Zapata | malle11 | 743, 1584 |
 | Jorge Elías Builes | JorgeBuiles | 72, 300 |
 | PENDIENTE: integrante 4 | PENDIENTE | 134, 79 |
