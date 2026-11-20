@@ -4,10 +4,6 @@ Ocho problemas Medium de LeetCode resueltos por el grupo, uno por familia
 vista en el curso: heap, ordenamiento, grafos (Dijkstra y MST),
 programación dinámica, greedy y backtracking.
 
-> ⚠️ **Antes de entregar:** busca en este archivo todo lo que diga
-> `PENDIENTE` y reemplázalo (nombres, usuarios de git y la elección de
-> algoritmo de quien resolvió cada ejercicio). Borra este bloque al terminar.
-
 ## Autoría
 
 | Integrante | Usuario de git | Ejercicios |
@@ -15,7 +11,7 @@ programación dinámica, greedy y backtracking.
 | Luis Fernando Zapata Castaño  |  luisferzap12 | 215, 179 |
 | Luz Mallely Zapata | malle11 | 743, 1584 |
 | Jorge Elías Builes | JorgeBuiles | 72, 300 |
-| PENDIENTE: integrante 4 | PENDIENTE | 134, 79 |
+| Juan Gallego | juangallego06 | 134, 79 |
 
 
 
@@ -29,8 +25,8 @@ programación dinámica, greedy y backtracking.
 | 4 | Grafos (MST) | [1584. Min Cost to Connect All Points](https://leetcode.com/problems/min-cost-to-connect-all-points/) | malle11 | [`min-cost-to-connect-all-points/`](./min-cost-to-connect-all-points/) | [png](./evidencias/min-cost-to-connect-all-points-accepted.png) |
 | 5 | Programación dinámica | [72. Edit Distance](https://leetcode.com/problems/edit-distance/) | JorgeBuiles | [`edit-distance/`](./edit-distance/) | [png](./evidencias/edit-distance-accepted.png) |
 | 6 | Programación dinámica | [300. Longest Increasing Subsequence](https://leetcode.com/problems/longest-increasing-subsequence/) | JorgeBuiles | [`longest-increasing-subsequence/`](./longest-increasing-subsequence/) | [png](./evidencias/longest-increasing-subsequence-accepted.png) |
-| 7 | Greedy | [134. Gas Station](https://leetcode.com/problems/gas-station/) | PENDIENTE | [`gas-station/`](./gas-station/) | [png](./evidencias/gas-station-accepted.png) |
-| 8 | Backtracking | [79. Word Search](https://leetcode.com/problems/word-search/) | PENDIENTE | [`word-search/`](./word-search/) | [png](./evidencias/word-search-accepted.png) |
+| 7 | Greedy | [134. Gas Station](https://leetcode.com/problems/gas-station/) | Juan Gallego | [`gas-station/`](./gas-station/) | [png](./evidencias/gas-station-accepted.png) |
+| 8 | Backtracking | [79. Word Search](https://leetcode.com/problems/word-search/) | Juan Gallego | [`word-search/`](./word-search/) | [png](./evidencias/word-search-accepted.png) |
 
 ---
 
@@ -181,9 +177,9 @@ sirve: destruye qué índices se pueden usar.
 
 ## 134. Gas Station
 
-Autor: PENDIENTE: nombre (`usuario-git`)  
+Autor: Juan Gallego (`Juan Gallego`)  
 Familia: greedy  
-Código: [`gas-station/`](./gas-station/)
+Código: [`gas-station/Solution.cs`](./gas-station/Solution.cs) (C#)
 
 **Criterio local:** un acumulado que no se retracta. Si `sum(gas) < sum(cost)`
 es imposible (`-1`); si no, existe exactamente un inicio. Se recorre una
@@ -196,6 +192,10 @@ hasta `i`, el candidato pasa a `i + 1` y el tanque vuelve a 0.
 desde `s`; empezar en `k` con tanque vacío es igual o peor, así que ninguna
 sirve de inicio.
 
+**Implementación:** en la misma pasada se lleva `total` (suma de todas las
+diferencias) y `tanque` (acumulado desde el inicio candidato). Al final, si
+`total < 0` se devuelve `-1`; si no, `inicio`.
+
 **Complejidad** (`n = gas.length`):
 - Tiempo: `Θ(n)` (una pasada).
 - Espacio: `Θ(1)` extra.
@@ -206,9 +206,9 @@ sirve de inicio.
 
 ## 79. Word Search
 
-Autor: PENDIENTE: nombre (`usuario-git`)  
+Autor: Juan Gallego (`Juan Gallego`)  
 Familia: backtracking  
-Código: [`word-search/`](./word-search/)
+Código: [`word-search/Solution.cs`](./word-search/Solution.cs) (C#)
 
 **Qué se elige:** desde cada celda que coincide con la primera letra se
 lanza la búsqueda; el estado es (posición en la grilla, índice de la letra
@@ -217,11 +217,20 @@ diagonal) que coincida con la letra siguiente y se **marca** como usado.
 
 **Qué se deshace:** si la rama no completa la palabra, al regresar se
 **quita la marca** de la celda y se prueba otro vecino. Una celda ya
-usada en el camino actual no se pisa otra vez.
+usada en el camino actual no se pisa otra vez. En el código la marca es
+pisar la celda con `'#'` y la desmarca es devolverle su letra (`temp`).
+
+**Podas antes de buscar:** si la palabra es más larga que `m · n`, o si al
+tablero le faltan letras que la palabra necesita (conteo de frecuencias),
+se responde `false` sin explorar. Además, si la primera letra de `word`
+aparece en la grilla más veces que la última, se busca la palabra al revés:
+hay menos celdas de arranque y el resultado es el mismo, porque un camino
+sirve en ambos sentidos.
 
 **Complejidad** (grilla `m × n`, palabra de longitud `L`):
 - Tiempo: `O(m · n · 4^L)` en el peor caso (cada paso ramifica en hasta 4 vecinos).
-- Espacio: `O(L)` de pila de recursión (la marca se hace sobre la misma grilla).
+- Espacio: `O(L)` de pila de recursión (la marca se hace sobre la misma grilla),
+  más `O(1)` para los conteos de letras (alfabeto fijo de 52 letras).
 
 ![Accepted — Word Search](evidencias/word-search-accepted.png)
 
